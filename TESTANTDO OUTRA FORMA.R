@@ -48,7 +48,6 @@ Patrimonio_Liquido <- Resultados_Contábeis[["DF Individual - Balanço Patrimoni
   filter(grepl("Patrimônio Líquido", DS_CONTA, ignore.case = TRUE))
 
 #------------------ROE----------------------------------------
-#Tentativa 2
 LL_PL <- Lucro_Liquido %>%
   inner_join(
     Patrimonio_Liquido,
@@ -61,9 +60,11 @@ ROE <- LL_PL %>%
   select(DT_REFER, DENOM_CIA, ROE)
 
 #---------------ROA-------------------------------------------
+
 Lucro_Liquido <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
   filter(grepl("3.11", CD_CONTA, ignore.case = TRUE))
 
+#------------------Identification AT---------------------
 Ativo_total <- Resultados_Contábeis[["DF Individual - Balanço Patrimonial Ativo"]] %>%
   filter(grepl("Ativo Total", DS_CONTA, ignore.case = TRUE))
 
@@ -77,7 +78,9 @@ ROA <- LL_ROA %>%
   mutate(ROA = (VL_CONTA.LL / VL_CONTA.AT) * 100) %>%  
   select(DT_REFER, DENOM_CIA, ROA)
 
-#----------------RECEITA LÍQUIDA DE JUROS----------------------------------------
+#----------------RECEITA LÍQUIDA----------------------------------------
+
+library(dplyr)
 
 Rec_inter_finan <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
   filter(grepl("Receitas de Intermediação Financeira", DS_CONTA, ignore.case = TRUE))
@@ -93,5 +96,20 @@ Rec_Líquida <- Des_inter_finan %>%
   )
 
 Rec_intermediação <- Rec_Líquida %>%
-  mutate(Líquido = (VL_CONTA.Rec - VL_CONTA.Des)) %>%  
-  select(DT_REFER, DENOM_CIA, Líquido)
+  mutate(Liquido = (VL_CONTA.Rec - VL_CONTA.Des)) %>%  
+  select(DT_REFER, DENOM_CIA, Liquido)
+
+#------------Colocando ROA, ROE, Rec.intermediação e LL em Painel----------------
+
+# Usando data.frame
+Dados_Painel <- data.frame(
+  Data = ROE$DT_REFER,
+  Cia = ROA$DENOM_CIA,
+  ROA = ROA$ROA,
+  ROE = ROE$ROE
+)
+
+
+
+
+
