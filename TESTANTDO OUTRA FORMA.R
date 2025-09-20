@@ -62,7 +62,6 @@ ROE <- LL_PL %>%
 
 #RESUMO: O PACOTE TEM APENAS OS DADOS DE FINAL DE ANO, NÃO TEM TRIMESTRAL.
 
-
 #----------------MARGEM FINANCEIRA----------------------------------------
 
 #atividade para sexta 
