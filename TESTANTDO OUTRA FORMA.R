@@ -1,5 +1,8 @@
 library(GetDFPData2)
 library(dplyr)
+
+#RESUMO: O PACOTE TEM APENAS OS DADOS DE FINAL DE ANO, NÃO TEM TRIMESTRAL.
+
 #------------------Puxando dados do Bancos-----------------
 #23 bancos trabalhados
 
@@ -8,7 +11,7 @@ Empresas_CVM <- get_info_companies()
 
 #Dexei só as empresas com registro ativo
 Empresas_CVM <- Empresas_CVM %>%
-  filter(SIT_REG == "ATIVO")
+  filter(SIT_REG == "ATIVO") 
 
 #Filtrei só por bancos
 BANCOS <- Empresas_CVM %>%
@@ -41,11 +44,8 @@ names(Resultados_Contábeis)
 Lucro_Liquido <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
   filter(grepl("3.11", CD_CONTA, ignore.case = TRUE))
 
-
 Patrimonio_Liquido <- Resultados_Contábeis[["DF Individual - Balanço Patrimonial Passivo"]] %>%
   filter(grepl("Patrimônio Líquido", DS_CONTA, ignore.case = TRUE))
-
-LL_PL <- inner_join(Lucro_Liquido, Patrimonio_Liquido, by = "DT_REFER")
 
 #------------------ROE----------------------------------------
 #Tentativa 2
@@ -60,18 +60,38 @@ ROE <- LL_PL %>%
   mutate(ROE = (VL_CONTA.LL / VL_CONTA.PL) * 100) %>%  
   select(DT_REFER, DENOM_CIA, ROE)
 
-#RESUMO: O PACOTE TEM APENAS OS DADOS DE FINAL DE ANO, NÃO TEM TRIMESTRAL.
+#---------------ROA-------------------------------------------
+Lucro_Liquido <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
+  filter(grepl("3.11", CD_CONTA, ignore.case = TRUE))
 
-#----------------MARGEM FINANCEIRA----------------------------------------
+Ativo_total <- Resultados_Contábeis[["DF Individual - Balanço Patrimonial Ativo"]] %>%
+  filter(grepl("Ativo Total", DS_CONTA, ignore.case = TRUE))
 
-#atividade para sexta 
-#Encontrar os seguinte índices: o Retorno sobre ativos (ROA- Return on Assets), o Retorno sobre
-#o Patrimônio Líquido (ROE- Return on Equity), a Receita Líquida de Juros (NII- Net
-#Interest Income) e o Resultado Líquido de intermediação Financeira (NIM- Net interest
-#Margin)." "FAZER DADOS EM PAINEL"
+LL_ROA <- Lucro_Liquido %>%
+  inner_join(
+    Ativo_total,
+    by = c("DT_REFER", "DENOM_CIA"),
+    suffix = c(".LL", ".AT")         
+  )
+ROA <- LL_ROA %>%
+  mutate(ROA = (VL_CONTA.LL / VL_CONTA.AT) * 100) %>%  
+  select(DT_REFER, DENOM_CIA, ROA)
 
-#Se possível
-#tamanho do banco (representada pelo total de
-#ativos), capitalização (medida pela razão patrimônio líquido sobre total de ativos- PLA), custos administrativos, 
-#liquidez e qualidade dos créditos."
+#----------------RECEITA LÍQUIDA DE JUROS----------------------------------------
 
+Rec_inter_finan <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
+  filter(grepl("Receitas de Intermediação Financeira", DS_CONTA, ignore.case = TRUE))
+
+Des_inter_finan <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
+  filter(grepl("Despesas de Intermediação Financeira", DS_CONTA, ignore.case = TRUE))
+
+Rec_Líquida <- Des_inter_finan %>%
+  inner_join(
+    Rec_inter_finan,
+    by = c("DT_REFER", "DENOM_CIA"),
+    suffix = c(".Rec", ".Des")         
+  )
+
+Rec_intermediação <- Rec_Líquida %>%
+  mutate(Líquido = (VL_CONTA.Rec - VL_CONTA.Des)) %>%  
+  select(DT_REFER, DENOM_CIA, Líquido)
