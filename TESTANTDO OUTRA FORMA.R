@@ -64,10 +64,6 @@ ROE <- LL_PL %>%
 Lucro_Liquido <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
   filter(grepl("3.11", CD_CONTA, ignore.case = TRUE))
 
-#------------------Identification AT---------------------
-Ativo_total <- Resultados_Contábeis[["DF Individual - Balanço Patrimonial Ativo"]] %>%
-  filter(grepl("Ativo Total", DS_CONTA, ignore.case = TRUE))
-
 LL_ROA <- Lucro_Liquido %>%
   inner_join(
     Ativo_total,
@@ -78,28 +74,17 @@ ROA <- LL_ROA %>%
   mutate(ROA = (VL_CONTA.LL / VL_CONTA.AT) * 100) %>%  
   select(DT_REFER, DENOM_CIA, ROA)
 
-#----------------RECEITA LÍQUIDA----------------------------------------
+#------------------Identification AT---------------------
+Ativo_total <- Resultados_Contábeis[["DF Individual - Balanço Patrimonial Ativo"]] %>%
+  filter(grepl("Ativo Total", DS_CONTA, ignore.case = TRUE))
 
-library(dplyr)
+Ativo_total <- Ativo_total %>%
+  select(DT_REFER,DENOM_CIA,VL_CONTA)
 
-Rec_inter_finan <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
-  filter(grepl("Receitas de Intermediação Financeira", DS_CONTA, ignore.case = TRUE))
+#Aqui tem o problema em analisar a companhia de forma individual, desconsiderando toda  a holding.
+#O Banco do Brasil aparece como maior banco - isso em 2024.
 
-Des_inter_finan <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
-  filter(grepl("Despesas de Intermediação Financeira", DS_CONTA, ignore.case = TRUE))
-
-Rec_Líquida <- Des_inter_finan %>%
-  inner_join(
-    Rec_inter_finan,
-    by = c("DT_REFER", "DENOM_CIA"),
-    suffix = c(".Rec", ".Des")         
-  )
-
-Rec_intermediação <- Rec_Líquida %>%
-  mutate(Liquido = (VL_CONTA.Rec - VL_CONTA.Des)) %>%  
-  select(DT_REFER, DENOM_CIA, Liquido)
-
-#------------Colocando ROA, ROE, Rec.intermediação e LL em Painel----------------
+#---------------------Painel----------------
 
 # Usando data.frame
 Dados_Painel <- data.frame(
@@ -109,7 +94,13 @@ Dados_Painel <- data.frame(
   ROE = ROE$ROE
 )
 
+#----------------RESULTADO FINANCEIRO----------------------------------------
 
+library(dplyr)
+#Tem que tratar, há uma rúbrica passando e é necessário ver o motivo
+Resultado_Intermediação <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
+  filter(grepl("3.03", CD_CONTA, ignore.case = TRUE))
 
-
+Resultado_Intermediação <- Resultado_Intermediação %>%
+  select(DT_REFER, DENOM_CIA,VL_CONTA)
 
