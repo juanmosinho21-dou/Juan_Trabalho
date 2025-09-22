@@ -1,7 +1,7 @@
 library(GetDFPData2)
 library(dplyr)
-
-#RESUMO: O PACOTE TEM APENAS OS DADOS DE FINAL DE ANO, NÃO TEM TRIMESTRAL.
+install.packages("remotes")
+library(remotes)
 
 #------------------Puxando dados do Bancos-----------------
 #23 bancos trabalhados
@@ -26,26 +26,26 @@ CD_BANCOS <- Empresas_CVM %>%
 #------------------Puxando por códigos---------------------
 
 library(GetDFPData2)
-Resultados_Contábeis <- get_dfp_data(
+Resultados_Contábeis <- GetDFPData2:::get_itr_data(
   companies_cvm_codes = CD_BANCOS$CD_CVM,
-  first_year = 2021,
+  first_year = 2000,
   last_year = lubridate::year(Sys.Date()),
   type_docs = c("BPA", "BPP", "DRE"),
-  type_format = c("con", "ind"),
+  type_format = ("con"),
   clean_data = TRUE,
   use_memoise = FALSE,
-  cache_folder = "gdfpd2_cache",
-  do_shiny_progress = FALSE
+  cache_folder = "gdfpd2_cache"
 )
-
 names(Resultados_Contábeis)
-#------------------Indentificando LL e PL---------------------
-#Filtrei o LL e o PL
-Lucro_Liquido <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
-  filter(grepl("3.11", CD_CONTA, ignore.case = TRUE))
 
-Patrimonio_Liquido <- Resultados_Contábeis[["DF Individual - Balanço Patrimonial Passivo"]] %>%
-  filter(grepl("Patrimônio Líquido", DS_CONTA, ignore.case = TRUE))
+#------------------Indentificando LL e PL---------------------
+
+#Filtrei o LL e o PL
+Lucro_Liquido <- Resultados_Contábeis[["DF Consolidado - Demonstração do Resultado"]] %>%
+  filter(grepl("Lucro ou Prejuízo Líquido Consolidado do Período", DS_CONTA, ignore.case = TRUE))
+
+Patrimonio_Liquido <- Resultados_Contábeis[["DF Consolidado - Balanço Patrimonial Passivo"]] %>%
+  filter(grepl("Patrimônio Líquido Consolidado", DS_CONTA, ignore.case = TRUE))
 
 #------------------ROE----------------------------------------
 LL_PL <- Lucro_Liquido %>%
@@ -55,9 +55,12 @@ LL_PL <- Lucro_Liquido %>%
     suffix = c(".LL", ".PL")         
   )
 
-ROE <- LL_PL %>%
+ROE_teste <- LL_PL %>%
   mutate(ROE = (VL_CONTA.LL / VL_CONTA.PL) * 100) %>%  
   select(DT_REFER, DENOM_CIA, ROE)
+
+colnames(ROE) <- c("Data", "Nome", "ROE")
+
 
 #---------------ROA-------------------------------------------
 
@@ -81,8 +84,6 @@ Ativo_total <- Resultados_Contábeis[["DF Individual - Balanço Patrimonial Ativ
 Ativo_total <- Ativo_total %>%
   select(DT_REFER,DENOM_CIA,VL_CONTA)
 
-#Aqui tem o problema em analisar a companhia de forma individual, desconsiderando toda  a holding.
-#O Banco do Brasil aparece como maior banco - isso em 2024.
 
 #---------------------Painel----------------
 
