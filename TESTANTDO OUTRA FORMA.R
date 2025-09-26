@@ -58,6 +58,16 @@ distinct()
 Lucro_Liquido <- Lucro_Liquido %>% 
   select(-VERSAO, -GRUPO_DFP, -MOEDA, -ESCALA_MOEDA, -COLUNA_DF, -source_file, -quarter)
 
+#------------TESTANDO LL-------
+# 1. Criação da Coluna de Diferença de Dias (Duração do Exercício)
+Colocandodias <- Lucro_Liquido %>%
+  mutate(
+    DIAS = as.numeric(difftime(DT_FIM_EXERC, DT_INI_EXERC, units = "days"))
+  )
+
+# Filtramos para manter apenas as linhas entre 88 e 93 dias.
+Lucro_Liquido <- Colocandodias %>%
+  filter(DIAS >= 88 & DIAS <= 93)
 
 #PARA PL
 Patrimonio_Liquido <- Resultados_Contábeis[["DF Consolidado - Balanço Patrimonial Passivo"]] %>%
@@ -85,6 +95,14 @@ colnames(ROE) <- c("Data", "Nome", "ROE")
 
 library(writexl)
 write_xlsx(Lucro_Liquido, "Lucro_Liquido.xlsx")
+
+library(dplyr)
+ROE_trimestre <- LL_PL %>%
+  filter(DT_REFER %in% Vetordata) %>%   # pega apenas os trimestres desejados
+  mutate(ROE = (VL_CONTA.LL / VL_CONTA.PL) * 100) %>%
+  select(DT_REFER, DENOM_CIA, ROE)
+
+
 #---------------ROA-------------------------------------------
 
 Lucro_Liquido <- Resultados_Contábeis[["DF Individual - Demonstração do Resultado"]] %>%
