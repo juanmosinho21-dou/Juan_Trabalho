@@ -2,26 +2,27 @@
 #1 - Medir a receita com TVM ✅
 #2 - Medir indicadores (ROA/ROE)✅
 #3 - Medir SPREAD bancário 
-#-------INFORMAÇÃOES---------
+#-------LIBRARY PACOTES-------
+library(dplyr)
+library(GetBCBData)
+library(xts)
+library(lubridate)
+library(urca)
+library(tseries)
+library(vars)
+library(ggplot2)
+#-------INFORMATIVENESS---------
 #Estou depois do teste de dick-fuller, as séries são estácionarias
 
-#------PUXANDO O ARQUIVO EM ZIP----------
-# Caminho do ZIP
+#-------CAMINHO do ZIP-----------
 zip_path <- "C:/Users/juanm/Downloads/arquivos renomeados.zip"
 
-# Lista arquivos dentro do ZIP
-arquivos <- unzip(zip_path, list = TRUE)$Name
-csv_files <- arquivos[grepl("\\.csv$", arquivos)]
-
-IF_DATA_BACEN <- lapply(csv_files, function(file){read.csv2(unz(zip_path, file), encoding = "UTF-8")})
-
-# Nomeia a lista
-names(IF_DATA_BACEN) <- basename(csv_files)
-#---------TESTANDO OUTRA FORMA-------------
 Passivo <- IF_DATA_BACEN[grep("Passivo", names(IF_DATA_BACEN))]
 Ativo <- IF_DATA_BACEN[grep("Ativo", names(IF_DATA_BACEN))]
 DRE <- IF_DATA_BACEN[grep("Dem_Resultado", names(IF_DATA_BACEN))]
+
 #--------FILTRANDO O PATRIMONIO LIQUIDO----------
+
 Patrimônio_Líquido <- bind_rows(Passivo) %>%
   filter(TCB == "b1" & Código %in% AT_6$Código) %>%  
   select(Instituição, Código, Data, `Patrimônio.Líquido..j.`)
@@ -30,6 +31,7 @@ Patrimônio_Líquido <- Patrimônio_Líquido %>%
     Patrimônio_Líquido = `Patrimônio.Líquido..j.`)
 
 #--------FILTRANDO O LUCRO LIQUIDO----------
+
 Lucro_Líquido <- bind_rows(DRE) %>%
   filter(TCB == "b1" & Código %in% AT_6$Código) %>%  
   select(Instituição, Código, Data, `Lucro.Líquido..j.....g.....h.....i.`)
@@ -37,7 +39,7 @@ Lucro_Líquido <- Lucro_Líquido %>%
   rename(
     Lucro_Líquido = `Lucro.Líquido..j.....g.....h.....i.`)
 
-#----------MEDINDO OS NÚMEROS----------
+#----------MEDINDO A QUANTIDADE----------
 
 Número_dataPL <- Patrimônio_Líquido %>%
   group_by(Instituição) %>%
@@ -48,6 +50,7 @@ Número_dataLL <- Lucro_Líquido %>%
   summarise(n_datas = n_distinct(Data))
 
 #--------FILTRANDO O ATIVO TOTAL---------
+
 Ativo_Total <- bind_rows(Ativo) %>%
   filter(TCB == "b1" & (TC == 1 | TC == 2)) %>%  # filtra TCB e TC
   select(Instituição, Código, Data, `Ativo.Total..k.....i.....j.`, TCB)
@@ -63,8 +66,9 @@ TVM <- bind_rows(Ativo) %>%
 TVM <- TVM %>%         
   rename(
     TVM = TVM.e.Instrumentos.Financeiros.Derivativos..c.)
-#------------PUXANDO APENAS OS 5 MAIORES-----------------
 
+#------------PUXANDO APENAS OS 5 MAIORES-----------------
+#FICOU COM 6 PORQUÊ OS BANCOS MUDAM DE NOME AO LONGO DO TEMPO
 AT_6 <- Ativo_Total %>%
   mutate(Ativo_Total = as.numeric(gsub("\\.", "", Ativo_Total))) %>%  
   filter(!is.na(Instituição)) %>%                                   
@@ -73,7 +77,8 @@ AT_6 <- Ativo_Total %>%
   arrange(desc(media_ativo)) %>%
   head(6)
 
-#-----------CÁLCULANDO O ROE---------------
+#-----------CALCULATION O ROE---------------
+
 Lucro_Líquido <- Lucro_Líquido %>%
   mutate(Lucro_Líquido = as.numeric(gsub(",", ".", gsub("\\.", "", Lucro_Líquido))))
 
@@ -82,22 +87,20 @@ Patrimônio_Líquido <- Patrimônio_Líquido %>%
 
 ROE <- Lucro_Líquido %>%
   left_join(Patrimônio_Líquido, by = c("Instituição", "Data")) %>%
-  mutate((ROE = Lucro_Líquido/Patrimônio_Líquido) * 100)
+  mutate(ROE = (Lucro_Líquido / Patrimônio_Líquido) * 100)
   
 ROE <- ROE %>%
     select(-Lucro_Líquido,Patrimônio_Líquido,Código.y)
+
 ROE <- ROE %>%
   select(Data, Instituição, ROE)
+
 
 Número_ROE <- ROE %>%
   group_by(Instituição) %>%
   summarise(n_datas = n_distinct(Data))
 
 #-----------TAXA SELIC------------
-install.packages("GetBCBData")
-library(GetBCBData)
-library(xts)
-
 Taxa_SELIC <- gbcbd_get_series(
   id = 432, # Taxa Selic anualizada base 252
   first.date = Sys.Date() - 25 * 365,
@@ -106,8 +109,6 @@ Taxa_SELIC <- gbcbd_get_series(
   be.quiet = FALSE
 )
 
-#Colocando em trimestre
-library(lubridate)
 Taxa_SELIC_Trimestral <- Taxa_SELIC %>%
   mutate(
     Trimestre = paste0(year(ref.date), "-Q", quarter(ref.date))  
@@ -130,97 +131,60 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
     Data = paste0(Mes, "/", Ano)
   ) %>%
   select(Data, everything(), -Mes, -Ano, -Trimestre)
+#---------ROE INDIVIDUALMENTE----------
 
-#---------GRÁFICO ROE x SELIC---------
+#PARA O SANTANDER
+ROE_BB <- ROE %>%
+  filter(Instituição %in% c("BB")) %>%
+  select(Data, Instituição, ROE)
 
-Dados_Combinados <- ROE %>%
-  inner_join(Taxa_SELIC_Trimestral, by = "Data")
+#PARA O SANTANDER
+ROE_SANTANDER <- ROE %>%
+  filter(Instituição %in% c("SANTANDER BRASIL","SANTANDER BANESPA", "SANTANDER")) %>%
+  select(Data, Instituição, ROE)
 
-ggplot(Dados_Combinados, aes(x = as.Date(paste0("01/", Data), format = "%d/%m/%Y"))) +
-  geom_line(aes(y = SELIC_Fim, color = "SELIC"), size = 1.2) +
-  geom_line(aes(y = ROE * 100, color = "ROE"), size = 1.2) +
-  scale_color_manual(values = c("ROE" = "blue", "SELIC" = "red")) +
-  scale_y_continuous(
-    name = "Percentual (%)",
-    labels = label_number(suffix = "%")
-  ) +
-  labs(
-    title = "Evolução Trimestral do ROE e da Taxa SELIC",
-    x = "Ano",
-    color = "Variável"
-  ) +
-  theme_minimal(base_size = 13) +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold"),
-    legend.position = "top"
-  )
+#PARA O BRADESCO
+ROE_BRADESCO <- ROE %>%
+  filter(Instituição == "BRADESCO") %>%
+  select(Data, Instituição, ROE)
 
-#-----------TESTE DE DICKEY-FULLER----------
-install.packages("urca")
-library(urca)
+#PARA O CAIXA ECONOMICA FEDERAL
+ROE_CAIXA <- ROE %>%
+  filter(Instituição == "CAIXA ECONOMICA FEDERAL") %>%
+  select(Data, Instituição, ROE)
 
-VAR_Dados <- Dados_Combinados %>%
-  select(ROE, SELIC_Fim) %>%
-  na.omit()
+#PARA O ITAU
+ROE_ITAU <- ROE %>%
+  filter(Instituição == "ITAU") %>%
+  select(Data, Instituição, ROE)
 
-# Teste ADF para ROE
-summary(ur.df(VAR_Dados$ROE, type = "drift", selectlags = "AIC"))
-# Teste ADF para SELIC
-summary(ur.df(VAR_Dados$SELIC_Fim, type = "drift", selectlags = "AIC"))
+#---------ADF INDIVIDUALMENTE------
+#Terei que remover as NAs e em seguida voltar para verificar os meses retirados
 
-#------------Augmented Dickey-Fuller Test Unit Root Test-------------- 
-#Call:
-#lm(formula = z.diff ~ z.lag.1 + 1 + z.diff.lag)
+# Teste ADF para ROE DO BANCO DO BRASIL #Não é estacionária
+ROE_BB <- ROE_BB %>%
+  filter(!is.na(ROE))
+summary(ur.df(ROE_BB$ROE, type = "drift", selectlags = "AIC"))
 
-#Residuals:
-#Min      1Q  Median      3Q     Max 
-#-9.3564 -0.2301 -0.0023  0.2611  8.5421 
+# Teste ADF para ROE DO SANTANDER
+#A 5% E 10% de significance é estácionario, a 1% não
+ROE_BRADESCO <- ROE_BRADESCO %>%
+  filter(!is.na(ROE))
+summary(ur.df(ROE_BRADESCO$ROE, type = "drift", selectlags = "AIC"))
 
-#Coefficients:
-#Estimate Std. Error t value Pr(>|t|)    
-#(Intercept)    0.71605    0.20424   3.506  0.000498 ***
-#z.lag.1     -0.06074    0.01571  -3.866  0.000126 ***
-#z.diff.lag   0.03017    0.04585   0.658  0.510791    
+plot(ROE_BRADESCO$ROE)
 
-#Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# Teste ADF para ROE DO CAIXA
+ROE_CAIXA <- ROE_CAIXA %>%
+  filter(!is.na(ROE))
+summary(ur.df(ROE_CAIXA$ROE, type = "drift", selectlags = "AIC"))
 
-#Residual standard error: 1.707 on 475 degrees of freedom
-#Multiple R-squared:  0.03051,	Adjusted R-squared:  0.02643 
-#F-statistic: 7.473 on 2 and 475 DF,  p-value: 0.0006373
+# Teste ADF para ROE DO ITAU
+ROE_ITAU <- ROE_ITAU %>%
+  filter(!is.na(ROE))
+summary(ur.df(ROE_ITAU$ROE, type = "drift", selectlags = "AIC"))
 
-#RESULTADO
-#Value of test-statistic is: -3.8661 7.4886 
-#Critical values for test statistics: 
-  
-#  1pct  5pct 10pct
-#tau2 -3.44 -2.87 -2.57
-#phi1  6.47  4.61  3.79
-
-#---------TESTEANDO VAR---------
-library(tseries)
-library(vars)
-
-install.packages("vars")
-install.packages("tseries")
-adf.test(VAR_Dados$ROE)
-adf.test(VAR_Dados$SELIC_Fim)
-
-# Verificar número ótimo de defasagens
-VARselect(VAR_Dados, lag.max = 10, type = "const")
-
-# Suponha que o melhor seja p = 2
-VAR_Ajustado <- VAR(VAR_Dados, p = 2, type = "const")
-
-# Resumo do modelo
-summary(VAR_Ajustado)
-
-VAR_dados_diff <- diff(as.matrix(VAR_Dados))
-
-# Resumo do modelo
-summary(VAR_Ajustado)
-VAR_dados_diff <- as.data.frame(VAR_dados_diff)
-names(VAR_dados_diff) <- c("ROE","SELIC_Fim")
-
-# Analise os resultados da regressão
-summary(VAR_Ajustado)
-
+# Teste ADF para ROE DO SANTANDER
+ROE_SANTANDER <- ROE_SANTANDER %>%
+  filter(!is.na(ROE))
+summary(ur.df(ROE_SANTANDER$ROE, type = "drift", selectlags = "AIC"))
