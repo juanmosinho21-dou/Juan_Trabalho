@@ -1,7 +1,9 @@
 #-------OBJETIVOS DO TRABALHO------------
+
 #1 - Medir a receita com TVM ✅
 #2 - Medir indicadores (ROA/ROE)✅
 #3 - Medir SPREAD bancário 
+
 #-------LIBRARY PACOTES-------
 library(dplyr)
 library(GetBCBData)
@@ -11,8 +13,11 @@ library(urca)
 library(tseries)
 library(vars)
 library(ggplot2)
+library(readxl)
 #-------INFORMATIVENESS---------
-#Estou depois do teste de dick-fuller, as séries são estácionarias
+#Todas as series são estacionárias a um nível 5% de dig
+#Precisa coletar os dados na mão da Caixa para fechar todo o período
+#Identificar também quais os meses vão passar com erro de NA e verificar ser não existe mesmo
 
 #-------CAMINHO do ZIP-----------
 zip_path <- "C:/Users/juanm/Downloads/arquivos renomeados.zip"
@@ -20,8 +25,8 @@ zip_path <- "C:/Users/juanm/Downloads/arquivos renomeados.zip"
 Passivo <- IF_DATA_BACEN[grep("Passivo", names(IF_DATA_BACEN))]
 Ativo <- IF_DATA_BACEN[grep("Ativo", names(IF_DATA_BACEN))]
 DRE <- IF_DATA_BACEN[grep("Dem_Resultado", names(IF_DATA_BACEN))]
-
-#--------FILTRANDO O PATRIMONIO LIQUIDO----------
+      
+#--------FILTRANDO O PATRIMONIO LIQUIDO------
 
 Patrimônio_Líquido <- bind_rows(Passivo) %>%
   filter(TCB == "b1" & Código %in% AT_6$Código) %>%  
@@ -132,7 +137,6 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
   ) %>%
   select(Data, everything(), -Mes, -Ano, -Trimestre)
 #---------ROE INDIVIDUALMENTE----------
-
 #PARA O SANTANDER
 ROE_BB <- ROE %>%
   filter(Instituição %in% c("BB")) %>%
@@ -140,18 +144,16 @@ ROE_BB <- ROE %>%
 
 #PARA O SANTANDER
 ROE_SANTANDER <- ROE %>%
-  filter(Instituição %in% c("SANTANDER BRASIL","SANTANDER BANESPA", "SANTANDER")) %>%
-  select(Data, Instituição, ROE)
+  filter(Instituição %in% c("SANTANDER BRASIL","SANTANDER BANESPA", "SANTANDER"))
 
 #PARA O BRADESCO
 ROE_BRADESCO <- ROE %>%
-  filter(Instituição == "BRADESCO") %>%
-  select(Data, Instituição, ROE)
+  filter(Instituição == "BRADESCO") 
 
 #PARA O CAIXA ECONOMICA FEDERAL
-ROE_CAIXA <- ROE %>%
-  filter(Instituição == "CAIXA ECONOMICA FEDERAL") %>%
-  select(Data, Instituição, ROE)
+ROE_CAIXA <-ROE %>%
+  filter(Instituição == "CAIXA ECONOMICA FEDERAL") 
+
 
 #PARA O ITAU
 ROE_ITAU <- ROE %>%
@@ -159,32 +161,56 @@ ROE_ITAU <- ROE %>%
   select(Data, Instituição, ROE)
 
 #---------ADF INDIVIDUALMENTE------
-#Terei que remover as NAs e em seguida voltar para verificar os meses retirados
 
-# Teste ADF para ROE DO BANCO DO BRASIL #Não é estacionária
+#Teste ADF para Taxa SELIC
+summary(ur.df(Taxa_SELIC_Trimestral$SELIC_Média, type = "drift", selectlags = "AIC"))
+#PARA 5% e 1 é estacionária, para 10% não
+
+# Teste ADF para ROE DO BANCO DO BRASIL
 ROE_BB <- ROE_BB %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_BB$ROE, type = "drift", selectlags = "AIC"))
+#A 5% E 10% de significance é estácionario, a 1% não
 
 # Teste ADF para ROE DO SANTANDER
-#A 5% E 10% de significance é estácionario, a 1% não
 ROE_BRADESCO <- ROE_BRADESCO %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_BRADESCO$ROE, type = "drift", selectlags = "AIC"))
+#A 5% E 10% de significance é estácionario, a 1% não
 
-plot(ROE_BRADESCO$ROE)
+plot(ROE_CAIXA$ROE)
+plot(ROE_CAIXA$Data, ROE_CAIXA$ROE)
 
 # Teste ADF para ROE DO CAIXA
 ROE_CAIXA <- ROE_CAIXA %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_CAIXA$ROE, type = "drift", selectlags = "AIC"))
+#Estacinária para todos os graus de confiança 1%,5% e 10%
 
 # Teste ADF para ROE DO ITAU
 ROE_ITAU <- ROE_ITAU %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_ITAU$ROE, type = "drift", selectlags = "AIC"))
+#Estacinária para todos os graus de confiança 1%,5% e 10%
 
 # Teste ADF para ROE DO SANTANDER
 ROE_SANTANDER <- ROE_SANTANDER %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_SANTANDER$ROE, type = "drift", selectlags = "AIC"))
+#Estacinária para todos os graus de confiança 1%,5% e 10%
+
+#Irei fazer o var para com nível de confinça de 5%
+
+#-----VETOR AUTOREGRESSIVO------
+VAR_todos <- data.frame(
+  ROE_CAIXA = ROE_CAIXA$ROE,
+  ROE_BB = ROE_BB$ROE,
+  ROE_BRADESCO = ROE_BRADESCO$ROE,
+  ROE_ITAU = ROE_ITAU$ROE,
+  ROE_SANTANDER = ROE_SANTANDER$ROE,
+  SELIC = Taxa_SELIC_Trimestral$SELIC_Média
+)
+
+select_lags <- VARselect(VAR_todos, lag.max = 10, type = "const")
+print(select_lags$selection)
+
