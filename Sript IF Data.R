@@ -1,5 +1,5 @@
 #-------OBJETIVOS DO TRABALHO------------
-#1 - Medir o receita com TVM ✅
+#1 - Medir a receita com TVM ✅
 #2 - Medir indicadores (ROA/ROE)✅
 #3 - Medir SPREAD bancário 
 #-------INFORMAÇÃOES---------
@@ -21,7 +21,6 @@ names(IF_DATA_BACEN) <- basename(csv_files)
 Passivo <- IF_DATA_BACEN[grep("Passivo", names(IF_DATA_BACEN))]
 Ativo <- IF_DATA_BACEN[grep("Ativo", names(IF_DATA_BACEN))]
 DRE <- IF_DATA_BACEN[grep("Dem_Resultado", names(IF_DATA_BACEN))]
-
 #--------FILTRANDO O PATRIMONIO LIQUIDO----------
 Patrimônio_Líquido <- bind_rows(Passivo) %>%
   filter(TCB == "b1" & Código %in% AT_6$Código) %>%  
@@ -38,7 +37,8 @@ Lucro_Líquido <- Lucro_Líquido %>%
   rename(
     Lucro_Líquido = `Lucro.Líquido..j.....g.....h.....i.`)
 
-#----------MEDINDO NÚMEROS----------
+#----------MEDINDO OS NÚMEROS----------
+
 Número_dataPL <- Patrimônio_Líquido %>%
   group_by(Instituição) %>%
   summarise(n_datas = n_distinct(Data))
@@ -47,7 +47,7 @@ Número_dataLL <- Lucro_Líquido %>%
   group_by(Instituição) %>%
   summarise(n_datas = n_distinct(Data))
 
-#--------FILTRANDO O ATIVO TOTAL----------
+#--------FILTRANDO O ATIVO TOTAL---------
 Ativo_Total <- bind_rows(Ativo) %>%
   filter(TCB == "b1" & (TC == 1 | TC == 2)) %>%  # filtra TCB e TC
   select(Instituição, Código, Data, `Ativo.Total..k.....i.....j.`, TCB)
@@ -55,7 +55,8 @@ Ativo_Total <- Ativo_Total %>%
   rename(
     Ativo_Total = `Ativo.Total..k.....i.....j.`)
 
-#--------FILTRANDO O TÍTULOS E VALORES MOBILIARIARIOS----------
+#--------FILTRANDO OS TÍTULOS E VALORES MOBILIARIARIOS----------
+
 TVM <- bind_rows(Ativo) %>%
   filter(TCB == "b1" & Código %in% AT_6$Código) %>%  
   select(Data, Instituição, Código, TVM.e.Instrumentos.Financeiros.Derivativos..c.)
@@ -63,6 +64,7 @@ TVM <- TVM %>%
   rename(
     TVM = TVM.e.Instrumentos.Financeiros.Derivativos..c.)
 #------------PUXANDO APENAS OS 5 MAIORES-----------------
+
 AT_6 <- Ativo_Total %>%
   mutate(Ativo_Total = as.numeric(gsub("\\.", "", Ativo_Total))) %>%  
   filter(!is.na(Instituição)) %>%                                   
@@ -70,6 +72,7 @@ AT_6 <- Ativo_Total %>%
   summarise(media_ativo = mean(Ativo_Total, na.rm = TRUE)) %>%      
   arrange(desc(media_ativo)) %>%
   head(6)
+
 #-----------CÁLCULANDO O ROE---------------
 Lucro_Líquido <- Lucro_Líquido %>%
   mutate(Lucro_Líquido = as.numeric(gsub(",", ".", gsub("\\.", "", Lucro_Líquido))))
@@ -129,9 +132,6 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
   select(Data, everything(), -Mes, -Ano, -Trimestre)
 
 #---------GRÁFICO ROE x SELIC---------
-library(ggplot2)
-library(dplyr)
-library(scales)
 
 Dados_Combinados <- ROE %>%
   inner_join(Taxa_SELIC_Trimestral, by = "Data")
@@ -170,40 +170,57 @@ summary(ur.df(VAR_Dados$SELIC_Fim, type = "drift", selectlags = "AIC"))
 
 #------------Augmented Dickey-Fuller Test Unit Root Test-------------- 
 #Call:
-lm(formula = z.diff ~ z.lag.1 + 1 + z.diff.lag)
+#lm(formula = z.diff ~ z.lag.1 + 1 + z.diff.lag)
 
 #Residuals:
-  Min      1Q  Median      3Q     Max 
+#Min      1Q  Median      3Q     Max 
 #-9.3564 -0.2301 -0.0023  0.2611  8.5421 
 
 #Coefficients:
-  Estimate Std. Error t value Pr(>|t|)    
+#Estimate Std. Error t value Pr(>|t|)    
 #(Intercept)    0.71605    0.20424   3.506  0.000498 ***
-  z.lag.1     -0.06074    0.01571  -3.866  0.000126 ***
-  z.diff.lag   0.03017    0.04585   0.658  0.510791    
+#z.lag.1     -0.06074    0.01571  -3.866  0.000126 ***
+#z.diff.lag   0.03017    0.04585   0.658  0.510791    
 
 #Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 #Residual standard error: 1.707 on 475 degrees of freedom
-Multiple R-squared:  0.03051,	Adjusted R-squared:  0.02643 
-F-statistic: 7.473 on 2 and 475 DF,  p-value: 0.0006373
+#Multiple R-squared:  0.03051,	Adjusted R-squared:  0.02643 
+#F-statistic: 7.473 on 2 and 475 DF,  p-value: 0.0006373
 
 #RESULTADO
-Value of test-statistic is: -3.8661 7.4886 
-Critical values for test statistics: 
+#Value of test-statistic is: -3.8661 7.4886 
+#Critical values for test statistics: 
   
-  1pct  5pct 10pct
-tau2 -3.44 -2.87 -2.57
-phi1  6.47  4.61  3.79
+#  1pct  5pct 10pct
+#tau2 -3.44 -2.87 -2.57
+#phi1  6.47  4.61  3.79
 
 #---------TESTEANDO VAR---------
+library(tseries)
+library(vars)
 
 install.packages("vars")
+install.packages("tseries")
+adf.test(VAR_Dados$ROE)
+adf.test(VAR_Dados$SELIC_Fim)
+
+# Verificar número ótimo de defasagens
+VARselect(VAR_Dados, lag.max = 10, type = "const")
+
+# Suponha que o melhor seja p = 2
+VAR_Ajustado <- VAR(VAR_Dados, p = 2, type = "const")
+
+# Resumo do modelo
+summary(VAR_Ajustado)
+
 VAR_dados_diff <- diff(as.matrix(VAR_Dados))
+
+# Resumo do modelo
+summary(VAR_Ajustado)
 VAR_dados_diff <- as.data.frame(VAR_dados_diff)
 names(VAR_dados_diff) <- c("ROE","SELIC_Fim")
 
-VAR_Ajustado <- VAR(VAR_dados_diff, p = 1, type = "const")
 # Analise os resultados da regressão
 summary(VAR_Ajustado)
 
