@@ -45,7 +45,6 @@ Lucro_Líquido <- Lucro_Líquido %>%
     Lucro_Líquido = `Lucro.Líquido..j.....g.....h.....i.`)
 
 #----------MEDINDO A QUANTIDADE----------
-
 Número_dataPL <- Patrimônio_Líquido %>%
   group_by(Instituição) %>%
   summarise(n_datas = n_distinct(Data))
@@ -186,21 +185,21 @@ plot(ROE_CAIXA$Data, ROE_CAIXA$ROE)
 ROE_CAIXA <- ROE_CAIXA %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_CAIXA$ROE, type = "drift", selectlags = "AIC"))
-#Estacinária para todos os graus de confiança 1%,5% e 10%
+#Estacinária para todos os nível de significância 1%,5% e 10%
 
 # Teste ADF para ROE DO ITAU
 ROE_ITAU <- ROE_ITAU %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_ITAU$ROE, type = "drift", selectlags = "AIC"))
-#Estacinária para todos os graus de confiança 1%,5% e 10%
+#Estacinária para todos os nível de significância 1%,5% e 10%
 
 # Teste ADF para ROE DO SANTANDER
 ROE_SANTANDER <- ROE_SANTANDER %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_SANTANDER$ROE, type = "drift", selectlags = "AIC"))
-#Estacinária para todos os graus de confiança 1%,5% e 10%
+#Estacinária para todos os nível de significância 1%,5% e 10%
 
-#Irei fazer o var para com nível de confinça de 5%
+#Irei fazer o var para com nível de significância de 5%
 
 #-----VETOR AUTOREGRESSIVO------
 #Não foi possível fazer porquê os estão com tamanhos diferentes, irei fazer na mão os que estão faltando
@@ -213,6 +212,7 @@ VAR_todos <- data.frame(
   ROE_SANTANDER = ROE_SANTANDER$ROE,
   SELIC = Taxa_SELIC_Trimestral$SELIC_Média
 )
+
 
 
 
