@@ -14,10 +14,11 @@ library(tseries)
 library(vars)
 library(ggplot2)
 library(readxl)
+library(purrr)
 #-------INFORMATIVENESS---------
-#Todas as series são estacionárias a um nível 5% de dig
+#Todas as series são estacionárias a um nível 5% de sig
 #Precisa coletar os dados na mão da Caixa para fechar todo o período
-#Identificar também quais os meses vão passar com erro de NA e verificar ser não existe mesmo
+#Identificar também quais os meses vão passar com erro de NA e verificar se não existe mesmo
 
 #-------CAMINHO do ZIP-----------
 zip_path <- "C:/Users/juanm/Downloads/arquivos renomeados.zip"
@@ -27,13 +28,12 @@ Ativo <- IF_DATA_BACEN[grep("Ativo", names(IF_DATA_BACEN))]
 DRE <- IF_DATA_BACEN[grep("Dem_Resultado", names(IF_DATA_BACEN))]
       
 #--------FILTRANDO O PATRIMONIO LIQUIDO------
+Passivo_df <- map_dfr(Passivo, as.data.frame)
 
-Patrimônio_Líquido <- bind_rows(Passivo) %>%
-  filter(TCB == "b1" & Código %in% AT_6$Código) %>%  
-  select(Instituição, Código, Data, `Patrimônio.Líquido..j.`)
-Patrimônio_Líquido <- Patrimônio_Líquido %>%         
-  rename(
-    Patrimônio_Líquido = `Patrimônio.Líquido..j.`)
+Patrimônio_Líquido_test <- Passivo_df %>%
+  filter(TCB == "b1", Código %in% AT_6$Código) %>%
+  select(Instituição, Código, Data, `Patrimônio.Líquido..j.`) %>%
+  rename(Patrimônio_Líquido = `Patrimônio.Líquido..j.`)
 
 #--------FILTRANDO O LUCRO LIQUIDO----------
 
@@ -57,7 +57,7 @@ Número_dataLL <- Lucro_Líquido %>%
 #--------FILTRANDO O ATIVO TOTAL---------
 
 Ativo_Total <- bind_rows(Ativo) %>%
-  filter(TCB == "b1" & (TC == 1 | TC == 2)) %>%  # filtra TCB e TC
+  filter(TCB == "b1" & (TC == 1 | TC == 2)) %>%
   select(Instituição, Código, Data, `Ativo.Total..k.....i.....j.`, TCB)
 Ativo_Total <- Ativo_Total %>%         
   rename(
@@ -73,7 +73,9 @@ TVM <- TVM %>%
     TVM = TVM.e.Instrumentos.Financeiros.Derivativos..c.)
 
 #------------PUXANDO APENAS OS 5 MAIORES-----------------
-#FICOU COM 6 PORQUÊ OS BANCOS MUDAM DE NOME AO LONGO DO TEMPO
+
+#FICOU COM 6 PORQUÊ A CAIXA ALTERA O CÓDIGO AO LONGO DO TEMPO
+
 AT_6 <- Ativo_Total %>%
   mutate(Ativo_Total = as.numeric(gsub("\\.", "", Ativo_Total))) %>%  
   filter(!is.na(Instituição)) %>%                                   
@@ -161,7 +163,6 @@ ROE_ITAU <- ROE %>%
   select(Data, Instituição, ROE)
 
 #---------ADF INDIVIDUALMENTE------
-
 #Teste ADF para Taxa SELIC
 summary(ur.df(Taxa_SELIC_Trimestral$SELIC_Média, type = "drift", selectlags = "AIC"))
 #PARA 5% e 1 é estacionária, para 10% não
@@ -170,13 +171,13 @@ summary(ur.df(Taxa_SELIC_Trimestral$SELIC_Média, type = "drift", selectlags = "
 ROE_BB <- ROE_BB %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_BB$ROE, type = "drift", selectlags = "AIC"))
-#A 5% E 10% de significance é estácionario, a 1% não
+#A 5% E 10% de significance é estácionario, ja 1% não
 
 # Teste ADF para ROE DO SANTANDER
 ROE_BRADESCO <- ROE_BRADESCO %>%
   filter(!is.na(ROE))
 summary(ur.df(ROE_BRADESCO$ROE, type = "drift", selectlags = "AIC"))
-#A 5% E 10% de significance é estácionario, a 1% não
+#A 5% E 10% de significance é estácionario, ja 1% não
 
 plot(ROE_CAIXA$ROE)
 plot(ROE_CAIXA$Data, ROE_CAIXA$ROE)
@@ -202,6 +203,8 @@ summary(ur.df(ROE_SANTANDER$ROE, type = "drift", selectlags = "AIC"))
 #Irei fazer o var para com nível de confinça de 5%
 
 #-----VETOR AUTOREGRESSIVO------
+#Não foi possível fazer porquê os estão com tamanhos diferentes, irei fazer na mão os que estão faltando
+
 VAR_todos <- data.frame(
   ROE_CAIXA = ROE_CAIXA$ROE,
   ROE_BB = ROE_BB$ROE,
@@ -211,6 +214,5 @@ VAR_todos <- data.frame(
   SELIC = Taxa_SELIC_Trimestral$SELIC_Média
 )
 
-select_lags <- VARselect(VAR_todos, lag.max = 10, type = "const")
-print(select_lags$selection)
+
 
