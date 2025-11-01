@@ -186,6 +186,14 @@ ROE_ITAU <- ROE_testando_todos %>%
   filter(Instituição == "ITAU") %>%
   dplyr::select(Data, Instituição, ROE)
 
+#removendo os erros NA
+
+ROE_BB <- na.omit(ROE_BB)
+ROE_BRADESCO <- na.omit(ROE_BRADESCO)
+ROE_CAIXA <- na.omit(ROE_CAIXA)
+ROE_SANTANDER <- na.omit(ROE_SANTANDER)
+ROE_ITAU <- na.omit(ROE_ITAU)
+
 #---------ADF INDIVIDUALMENTE------
 #Teste ADF para Taxa SELIC
 summary(ur.df(Taxa_SELIC_Trimestral$SELIC_Média, type = "drift", selectlags = "AIC"))
@@ -238,10 +246,13 @@ VAR_todos <- data.frame(
 )
 
 #----BUSCANDO FALTANTES-------
-# EM TODOS ESTÁ FALTANDO 09/2006 E 06/2013
+#Todos os vetores estão com esses trimestres em comum
+#"09/2006" "06/2013" "12/2022" "03/2023" "06/2023" "09/2023" "12/2023" "03/2024"
+#"06/2024" "09/2024" "12/2024"
 
 FALTANTES_BB <- setdiff(Taxa_SELIC_Trimestral$Data,ROE_BB$Data)
 FALTANTES_SANTANDER <- setdiff(Taxa_SELIC_Trimestral$Data,ROE_SANTANDER$Data)
 FALTANTES_CAIXA <- setdiff(Taxa_SELIC_Trimestral$Data,ROE_CAIXA$Data)
 FALTANTES_ITAÚ <- setdiff(Taxa_SELIC_Trimestral$Data,ROE_ITAU$Data)
 FALTANTES_BRADESCO <- setdiff(Taxa_SELIC_Trimestral$Data,ROE_BRADESCO$Data)
+
