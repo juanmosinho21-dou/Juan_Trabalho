@@ -246,7 +246,7 @@ VAR_todos <- data.frame(
 )
 
 #----BUSCANDO FALTANTES-------
-#Todos os vetores estão com esses trimestres em comum
+#Todos os vetores estão com esses trimestres faltantes em comum
 #"09/2006" "06/2013" "12/2022" "03/2023" "06/2023" "09/2023" "12/2023" "03/2024"
 #"06/2024" "09/2024" "12/2024"
 
