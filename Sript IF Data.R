@@ -238,7 +238,6 @@ VAR_todos <- data.frame(
 )
 
 #----BUSCANDO FALTANTES-------
-
 # EM TODOS ESTÁ FALTANDO 09/2006 E 06/2013
 
 FALTANTES_BB <- setdiff(Taxa_SELIC_Trimestral$Data,ROE_BB$Data)
