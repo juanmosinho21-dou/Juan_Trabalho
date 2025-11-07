@@ -22,6 +22,7 @@ library(tidyverse)
 #Todas as series são estacionárias a um nível 5% de sig
 #Decidir qual a melhor defasagem para utilizar
 #system("git add Testando25.pdf") <- para adicionar arquivo no github pelo console
+#Ajustar o ROE_testando todas para fazer o df ROE_SANTANDER voltar a ter 4 colunas, quando fier o var é #só filtrar apenas a colunaa
 #-------CAMINHO do ZIP-----------
 
 Passivo <- IF_DATA_BACEN[grep("Passivo", names(IF_DATA_BACEN))]
@@ -67,8 +68,6 @@ Patrimônio_Líquido <- distinct(rbind(Bancos_Faltantes_PL, Patrimônio_Líquido
   
 #--------FILTRANDO O LUCRO LIQUIDO----------
 
-DRE1 <- bind_rows(DRE)
-
 Lucro_Líquido <- DRE %>%
   filter(TCB == "b1" & Código %in% AT_6$Código) %>%  
   select(Instituição, Código, Data, `Lucro.Líquido..j.....g.....h.....i.`)
@@ -76,7 +75,6 @@ Lucro_Líquido <- Lucro_Líquido %>%
   rename(
   Lucro_Líquido = `Lucro.Líquido..j.....g.....h.....i.`)
 Lucro_Líquido <- na.omit(Lucro_Líquido)
-
 
 #-------Tratando Faltantes para LL-------
 
@@ -170,7 +168,6 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC %>%
   )
 
 #---------TAXA SELIC TRIMESTRAL----------------
-"Ajeitar as colunas"
 
 Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
   mutate(
@@ -235,10 +232,8 @@ summary(Df_BB)
 
 
 # Teste ADF para ROE DO SANTANDER
-ROE_BRADESCO <- ROE_BRADESCO %>%
-  filter(!is.na(ROE))
-summary(ur.df(ROE_BRADESCO$ROE, type = "drift", selectlags = "AIC"))
-#A 5% E 10% de significance é estácionario, ja 1% não
+ROE_BRADESCO <- ur.df(ROE_BRADESCO$ROE, type = "drift", lags = 0)
+summary(ROE_BRADESCO)
 
 plot(ROE_CAIXA$ROE)
 
@@ -262,37 +257,20 @@ summary(ur.df(ROE_SANTANDER$ROE, type = "drift", selectlags = "AIC"))
 
 #Irei fazer o var com nível de significância de 5%
 
-
 #--------JUNTADO OS DATA FRAME-----------------
 Var_Santander <-  left_join(ROE_BRADESCO, Taxa_SELIC_Trimestral, 
                             copy = FALSE, suffix = c("Selic","Roe"))
+
 #------DETERMINANDO A ORDEM DE DEFASAGEM---------
 
-#VAR PARA O SANTANDER
-ROE_SANTANDER <- ROE_SANTANDER %>%
-  dplyr::select(ROE)
-
+#DEFININFO DEFASAGEM PARA O SANTANDER
 def = VARselect(ROE_SANTANDER, lag.max = 12, season = 12, type = "const")
 
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #1      1      1      1 
 
-#VAR PARA O BANCO DO BRASIL
-
+#DEFININFO DEFASAGEM PARA O BANCO DO BRASIL
+def = VARselect(ROE_BB$ROE, lag.max = 12, season = 12, type = "const")
 
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
-#11     11      1     12 
-
-VAR <- VAR(VAR_todos, p = 1, type = "const")
-
-#-----VETOR AUTOREGRESSIVO------
-
-VAR_todos <- data.frame(
-  ROE_CAIXA = ROE_CAIXA$ROE,
-  ROE_BB = ROE_BB$ROE,
-  ROE_BRADESCO = ROE_BRADESCO$ROE,
-  ROE_ITAU = ROE_ITAU$ROE,
-  ROE_SANTANDER = ROE_SANTANDER$ROE,
-  SELIC = Taxa_SELIC_Trimestral$SELIC_Média)
-
-
+#2      2      2      2 
