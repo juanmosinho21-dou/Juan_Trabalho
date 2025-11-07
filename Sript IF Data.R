@@ -25,6 +25,23 @@ library(tidyverse)
 #Ajustar o ROE_testando todas para fazer o df ROE_SANTANDER voltar a ter 4 colunas, quando fier o var é #só filtrar apenas a colunaa
 #-------CAMINHO do ZIP-----------
 
+# Caminho do zip
+zip_path <- "C:/Users/juanm/Downloads/arquivos renomeados.zip"
+
+# Pasta onde será extraído
+dest_dir <- "C:/Users/juanm/Downloads/arquivos_renomeados_extraidos"
+dir.create(dest_dir, showWarnings = FALSE)
+
+# Extrair o conteúdo do ZIP
+unzip(zip_path, exdir = dest_dir)
+
+# Listar todos os arquivos .csv (inclusive dentro da subpasta)
+arquivos_excel <- list.files(dest_dir, pattern = "\\.csv$", recursive = TRUE, full.names = TRUE)
+read.z
+# Mostrar apenas o nome do arquivo (sem caminho)
+nomes_arquivos <- basename(arquivos_excel)
+IF_DATA_BACEN <- lapply(arquivos_excel, read.csv, sep = ";", dec = ",", encoding = "UTF-8")
+
 Passivo <- IF_DATA_BACEN[grep("Passivo", names(IF_DATA_BACEN))]
 Ativo <- IF_DATA_BACEN[grep("Ativo", names(IF_DATA_BACEN))]
 DRE <- IF_DATA_BACEN[grep("Dem_Resultado", names(IF_DATA_BACEN))]
@@ -34,6 +51,7 @@ Ativo_df   <- as.data.frame(Ativo)
 DRE_df     <- as.data.frame(DRE)
       
 #--------FILTRANDO O PATRIMONIO LIQUIDO------
+
 Passivo <- bind_rows(Passivo)
 
 Patrimônio_Líquido <- Passivo %>%
@@ -41,7 +59,6 @@ Patrimônio_Líquido <- Passivo %>%
   dplyr::select(Instituição, Código, Data, `Patrimônio.Líquido..j.`) %>%
   rename(Patrimônio_Líquido = `Patrimônio.Líquido..j.`)
   Patrimônio_Líquido <- na.omit(Patrimônio_Líquido)
-  
 
 #-------TRATANDO FALTANTES PARA PL-------
 
@@ -61,8 +78,6 @@ Bancos_Faltantes_PL <- Bancos_Faltantes_PL %>%
                   Data,
                   Patrimônio_Líquido)
 
-Bancos_Faltantes <- na.omit(Bancos_Faltantes)
-
 #Juntando os data frmames
 Patrimônio_Líquido <- distinct(rbind(Bancos_Faltantes_PL, Patrimônio_Líquido))
   
@@ -76,9 +91,9 @@ Lucro_Líquido <- Lucro_Líquido %>%
   Lucro_Líquido = `Lucro.Líquido..j.....g.....h.....i.`)
 Lucro_Líquido <- na.omit(Lucro_Líquido)
 
-#-------Tratando Faltantes para LL-------
+#-------TRATANDO FALTANTES PARA LL-------
 
-Bancos_Faltantes_LL <- DRE1 %>%
+Bancos_Faltantes_LL <- DRE %>%
   filter(TCB == "b1",
          Código %in% AT_6$Código,
          Data %in% FALTANTES_BB) %>%
@@ -91,6 +106,7 @@ Bancos_Faltantes_LL <- Bancos_Faltantes_LL %>%
 Lucro_Líquido <- distinct(bind_rows(Lucro_Líquido, Bancos_Faltantes_LL))
 
 #----------MEDINDO A QUANTIDADE----------
+
 Número_dataPL <- Patrimônio_Líquido %>%
   group_by(Instituição) %>%
   summarise(n_datas = n_distinct(Data))
@@ -149,13 +165,13 @@ Número_ROE <- ROE_testando_todos %>%
   summarise(n_datas = n_distinct(Data))
 
 #-----------TAXA SELIC------------
+
 Taxa_SELIC <- gbcbd_get_series(
   id = 432, 
   first.date = as.Date("2000-01-01"),
   last.date  = as.Date("2024-12-31"),
   format.data = "long",
-  be.quiet = FALSE
-)
+  be.quiet = FALSE)
 
 Taxa_SELIC_Trimestral <- Taxa_SELIC %>%
   mutate(
@@ -168,7 +184,6 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC %>%
   )
 
 #---------TAXA SELIC TRIMESTRAL----------------
-
 Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
   mutate(
     Mes = case_when(
@@ -189,34 +204,32 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
 ROE_BB <- ROE_testando_todos %>%
   filter(Código %in% ("49906")) %>%
   dplyr::select(Data, Código, Instituição, ROE)
+ROE_BB <- na.omit(ROE_BB)
 
 #PARA O SANTANDER, ATUALIZANDO -> ESTOU FAZENDO O VAR
 ROE_SANTANDER <- ROE_testando_todos %>%
   filter(Código %in% c("30379"))
-  dplyr::select(ROE)
+dplyr::select(Data, Código, Instituição, ROE)
+ROE_SANTANDER <- na.omit(ROE_SANTANDER)
 
 #PARA O BRADESCO
 ROE_BRADESCO <- ROE_testando_todos %>%
   filter(Código == "10045") 
   dplyr::select(Data, Código, Instituição, ROE)
-
+  ROE_BRADESCO <- na.omit(ROE_BRADESCO)
+  
 #PARA O CAIXA ECONOMICA FEDERAL
 ROE_CAIXA <- ROE_testando_todos %>%
   filter(Código %in% c("51626","360305"))
   dplyr::select(Data, Código, Instituição, ROE)
+ROE_CAIXA <- na.omit(ROE_CAIXA)
 
 #PARA O ITAU
 ROE_ITAU <- ROE_testando_todos %>%
   filter(Código == "10069") %>%
   dplyr::select(Data, Código, Instituição, ROE)
-
-#removendo os erros NA
-
-ROE_BB <- na.omit(ROE_BB)
-ROE_BRADESCO <- na.omit(ROE_BRADESCO)
-ROE_CAIXA <- na.omit(ROE_CAIXA)
-ROE_SANTANDER <- na.omit(ROE_SANTANDER)
 ROE_ITAU <- na.omit(ROE_ITAU)
+
 
 #---------ADF INDIVIDUALMENTE------
 #Teste ADF para Taxa SELIC
@@ -234,26 +247,26 @@ summary(Df_BB)
 # Teste ADF para ROE DO SANTANDER
 ROE_BRADESCO <- ur.df(ROE_BRADESCO$ROE, type = "drift", lags = 0)
 summary(ROE_BRADESCO)
+#Estacinária para todos os nível de significância 1%,5% e 10%
 
-plot(ROE_CAIXA$ROE)
 
 # Teste ADF para ROE DO CAIXA
-ROE_CAIXA <- ROE_CAIXA %>%
-  filter(!is.na(ROE))
-summary(ur.df(ROE_CAIXA$ROE, type = "drift", selectlags = "AIC"))
+ROE_CAIXA <- ur.df(ROE_CAIXA$ROE, type = "drift", lags = 0)
+summary(ROE_CAIXA)
 #Estacinária para todos os nível de significância 1%,5% e 10%
+
 
 # Teste ADF para ROE DO ITAU
-ROE_ITAU <- ROE_ITAU %>%
-  filter(!is.na(ROE))
-summary(ur.df(ROE_ITAU$ROE, type = "drift", selectlags = "AIC"))
+ROE_ITAU <- ur.df(ROE_ITAU$ROE, type = "drift", lags = 0)
+summary(ROE_ITAU)
 #Estacinária para todos os nível de significância 1%,5% e 10%
 
+
 # Teste ADF para ROE DO SANTANDER
-ROE_SANTANDER <- ROE_SANTANDER %>%
-  filter(!is.na(ROE))
-summary(ur.df(ROE_SANTANDER$ROE, type = "drift", selectlags = "AIC"))
+ROE_SANTANDER <- ur.df(ROE_SANTANDER$ROE, type = "drift", lags = 0)
+summary(ROE_SANTANDER)
 #Estacinária para todos os nível de significância 1%,5% e 10%
+
 
 #Irei fazer o var com nível de significância de 5%
 
@@ -264,7 +277,7 @@ Var_Santander <-  left_join(ROE_BRADESCO, Taxa_SELIC_Trimestral,
 #------DETERMINANDO A ORDEM DE DEFASAGEM---------
 
 #DEFININFO DEFASAGEM PARA O SANTANDER
-def = VARselect(ROE_SANTANDER, lag.max = 12, season = 12, type = "const")
+def = VARselect(ROE_SANTANDER$ROE, lag.max = 12, season = 12, type = "const")
 
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #1      1      1      1 
@@ -274,3 +287,88 @@ def = VARselect(ROE_BB$ROE, lag.max = 12, season = 12, type = "const")
 
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #2      2      2      2 
+
+#DEFININFO DEFASAGEM PARA O CAIXA
+def = VARselect(ROE_CAIXA$ROE, lag.max = 12, season = 12, type = "const")
+#AIC(n)  HQ(n)  SC(n) FPE(n) 
+#1      1      1      1 
+
+#DEFININFO DEFASAGEM PARA O ITAU
+def = VARselect(ROE_ITAU$ROE, lag.max = 12, season = 12, type = "const")
+#AIC(n)  HQ(n)  SC(n) FPE(n) 
+#8      3      2      8 
+
+#DEFININFO DEFASAGEM PARA O BRADESCO
+def = VARselect(ROE_BRADESCO$ROE, lag.max = 12, season = 12, type = "const")
+#AIC(n)  HQ(n)  SC(n) FPE(n) 
+#8      3      1      8 
+
+#COM NÍVEL DE 5% DE SIGNIFICANCIA ULTILIZANDO SC COM 1 DE DEFASAGEM
+
+#
+
+#-------FAZENDO O VAR---------
+
+#VAR PARA O BANCO DO BRASIL
+VAR_BB <- VAR(cbind(ROE_BB$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
+              p = 1,  
+              type = "const")
+
+#Coefficients:
+#  y1.l1    y2.l1    const  
+#0.5967  -0.1281   4.6492
+
+
+# O ROE depende positivamente de seu própio valor defasado (59,67%)
+#Aumento de 1 p.p reduz o roe em 0,13, sugere efeito negativo da selic no roe
+
+#VAR PARA O SANTANDER
+VAR_SANTANDER <- VAR(cbind(ROE_SANTANDER$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
+              p = 1,  
+              type = "const")
+
+#Coefficients:
+#y1.l1     y2.l1     const  
+#-0.06755  -0.38550   8.93252 
+
+# O ROE depende positivamente de seu própio valor defasado (-0,06755%)
+#Aumento de 1 p.p reduz o roe em 0,39%, sugere efeito negativo da selic no roe
+
+#VAR PARA O ITAU
+VAR_ITAU <- VAR(cbind(ROE_ITAU$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
+                     p = 1,  
+                     type = "const")
+
+
+#Coefficients:
+#y1.l1    y2.l1    const  
+#0.2771  -0.2407   8.5467  
+
+# O ROE depende positivamente de seu própio valor defasado (0,2771%)
+#Aumento de 1 p.p reduz o roe em 0,24%, sugere efeito negativo da selic no roe
+
+#VAR PARA O ITAU
+VAR_CAIXA <- VAR(cbind(ROE_CAIXA$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
+                p = 1,  
+                type = "const")
+
+
+#Coefficients:
+#y1.l1     y2.l1     const  
+#0.05752  -0.41188  11.75614 
+
+# O ROE depende positivamente de seu própio valor defasado (0,05752%)
+#Aumento de 1 p.p reduz o roe em 0,41188%, sugere efeito negativo da selic no roe
+
+#VAR PARA O ITAU
+VAR_BRADESCO <- VAR(cbind(ROE_BRADESCO$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
+                p = 1,  
+                type = "const")
+
+
+#Coefficients:
+#y1.l1    y2.l1    const  
+#0.6567  -0.1032   3.5886  
+
+# O ROE depende positivamente de seu própio valor defasado (0,6567%)
+#Aumento de 1 p.p reduz o roe em 0,1032%, sugere efeito negativo da selic no roe
