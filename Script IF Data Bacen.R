@@ -364,3 +364,4 @@ VAR_BRADESCO <- VAR(cbind(ROE_BRADESCO$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
 #0.6567  -0.1032   3.5886  
 # O ROE depende positivamente de seu própio valor defasado (0,6567%)
 #Aumento de 1 p.p reduz o roe em 0,1032%, sugere efeito negativo da selic no roe
+
