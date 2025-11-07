@@ -20,10 +20,8 @@ library(writexl)
 library(tidyverse)
 #-------INFORMATIVENESS---------
 #Todas as series são estacionárias a um nível 5% de sig
-#Precisa coletar os dados na mão da Caixa para fechar todo o período
-#Identificar também quais os meses vão passar com erro de NA e verificar se não existe mesmo
-#Os arquivos DRE1 e PASSIVO1 foram transformados em dfs
-
+#Decidir qual a melhor defasagem para utilizar
+#system("git add Testando25.pdf") <- para adicionar arquivo no github pelo console
 #-------CAMINHO do ZIP-----------
 
 Passivo <- IF_DATA_BACEN[grep("Passivo", names(IF_DATA_BACEN))]
@@ -81,6 +79,7 @@ Lucro_Líquido <- na.omit(Lucro_Líquido)
 
 
 #-------Tratando Faltantes para LL-------
+
 Bancos_Faltantes_LL <- DRE1 %>%
   filter(TCB == "b1",
          Código %in% AT_6$Código,
@@ -111,7 +110,7 @@ Ativo_Total <- Ativo_Total %>%
   rename(
     Ativo_Total = `Ativo.Total..k.....i.....j.`)
 
-#--------FILTRANDO OS TÍTULOS E VALORES MOBILIARIARIOS----------
+#--------FILTRANDO OS TÍTULOS E VALORES MOBILIARIOS--------
 
 TVM <- bind_rows(Ativo) %>%
   filter(TCB == "b1" & Código %in% AT_6$Código) %>%  
@@ -169,6 +168,7 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC %>%
     SELIC_Média = mean(value, na.rm = TRUE),
     SELIC_Fim = last(value)                   
   )
+
 #---------TAXA SELIC TRIMESTRAL----------------
 "Ajeitar as colunas"
 
@@ -182,8 +182,10 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
     ),
     Ano = str_sub(Trimestre, 1, 4),
     Data = paste0(Mes, "/", Ano)
-  ) %>%
-  select(Data, SELIC_Média, SELIC_Fim)
+  )
+
+Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
+  dplyr::select(Data, SELIC_Média, SELIC_Fim)
 
 #---------ROE INDIVIDUALMENTE----------
 
@@ -191,10 +193,10 @@ ROE_BB <- ROE_testando_todos %>%
   filter(Código %in% ("49906")) %>%
   dplyr::select(Data, Código, Instituição, ROE)
 
-#PARA O SANTANDER
+#PARA O SANTANDER, ATUALIZANDO -> ESTOU FAZENDO O VAR
 ROE_SANTANDER <- ROE_testando_todos %>%
   filter(Código %in% c("30379"))
-  dplyr::select(Data, Código, Instituição, ROE)
+  dplyr::select(ROE)
 
 #PARA O BRADESCO
 ROE_BRADESCO <- ROE_testando_todos %>%
@@ -221,14 +223,16 @@ ROE_ITAU <- na.omit(ROE_ITAU)
 
 #---------ADF INDIVIDUALMENTE------
 #Teste ADF para Taxa SELIC
+
 summary(ur.df(Taxa_SELIC_Trimestral$SELIC_Média, type = "drift", selectlags = "AIC"))
 #PARA 5% e 1 é estacionária, para 10% não
 
+
 # Teste ADF para ROE DO BANCO DO BRASIL
-ROE_BB <- ROE_BB %>%
-  filter(!is.na(ROE))
-summary(ur.df(ROE_BB$ROE, type = "drift", selectlags = "AIC"))
-#A 5% E 10% de significance é estácionario, ja 1% não
+Df_BB <- ur.df(ROE_BB$ROE, type = "drift", lags = 0)
+summary(Df_BB)
+#Estacinária para todos os nível de significância 1%,5% e 10%
+
 
 # Teste ADF para ROE DO SANTANDER
 ROE_BRADESCO <- ROE_BRADESCO %>%
@@ -237,7 +241,6 @@ summary(ur.df(ROE_BRADESCO$ROE, type = "drift", selectlags = "AIC"))
 #A 5% E 10% de significance é estácionario, ja 1% não
 
 plot(ROE_CAIXA$ROE)
-plot(ROE_CAIXA$Data, ROE_CAIXA$ROE)
 
 # Teste ADF para ROE DO CAIXA
 ROE_CAIXA <- ROE_CAIXA %>%
@@ -257,7 +260,31 @@ ROE_SANTANDER <- ROE_SANTANDER %>%
 summary(ur.df(ROE_SANTANDER$ROE, type = "drift", selectlags = "AIC"))
 #Estacinária para todos os nível de significância 1%,5% e 10%
 
-#Irei fazer o var para com nível de significância de 5%
+#Irei fazer o var com nível de significância de 5%
+
+
+#--------JUNTADO OS DATA FRAME-----------------
+Var_Santander <-  left_join(ROE_BRADESCO, Taxa_SELIC_Trimestral, 
+                            copy = FALSE, suffix = c("Selic","Roe"))
+#------DETERMINANDO A ORDEM DE DEFASAGEM---------
+
+#VAR PARA O SANTANDER
+ROE_SANTANDER <- ROE_SANTANDER %>%
+  dplyr::select(ROE)
+
+def = VARselect(ROE_SANTANDER, lag.max = 12, season = 12, type = "const")
+
+#AIC(n)  HQ(n)  SC(n) FPE(n) 
+#1      1      1      1 
+
+#VAR PARA O BANCO DO BRASIL
+
+
+#AIC(n)  HQ(n)  SC(n) FPE(n) 
+#11     11      1     12 
+
+VAR <- VAR(VAR_todos, p = 1, type = "const")
+
 #-----VETOR AUTOREGRESSIVO------
 
 VAR_todos <- data.frame(
@@ -266,5 +293,6 @@ VAR_todos <- data.frame(
   ROE_BRADESCO = ROE_BRADESCO$ROE,
   ROE_ITAU = ROE_ITAU$ROE,
   ROE_SANTANDER = ROE_SANTANDER$ROE,
-  SELIC = Taxa_SELIC_Trimestral$SELIC_Média
-)
+  SELIC = Taxa_SELIC_Trimestral$SELIC_Média)
+
+
