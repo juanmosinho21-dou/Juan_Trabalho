@@ -19,10 +19,8 @@ library(stringr)
 library(writexl)
 library(tidyverse)
 #-------INFORMATIVENESS---------
-#Todas as series são estacionárias a um nível 5% de sig
-#Decidir qual a melhor defasagem para utilizar
+#Puxar os dados para fazer a mesma analise para o spread e tvm
 #system("git add Testando25.pdf") <- para adicionar arquivo no github pelo console
-#Ajustar o ROE_testando todas para fazer o df ROE_SANTANDER voltar a ter 4 colunas, quando fier o var é #só filtrar apenas a colunaa
 #-------CAMINHO do ZIP-----------
 
 # Caminho do zip
@@ -200,7 +198,6 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
   dplyr::select(Data, SELIC_Média, SELIC_Fim)
 
 #---------ROE INDIVIDUALMENTE----------
-
 ROE_BB <- ROE_testando_todos %>%
   filter(Código %in% ("49906")) %>%
   dplyr::select(Data, Código, Instituição, ROE)
@@ -234,9 +231,9 @@ ROE_ITAU <- na.omit(ROE_ITAU)
 #---------ADF INDIVIDUALMENTE------
 #Teste ADF para Taxa SELIC
 
-summary(ur.df(Taxa_SELIC_Trimestral$SELIC_Média, type = "drift", selectlags = "AIC"))
-#PARA 5% e 1 é estacionária, para 10% não
-
+Taxa_SELIC <- ur.df(Taxa_SELIC_Trimestral$SELIC_Média, type = "drift", lags = 0)
+summary(Taxa_SELIC)
+#Não é estacionaria
 
 # Teste ADF para ROE DO BANCO DO BRASIL
 Df_BB <- ur.df(ROE_BB$ROE, type = "drift", lags = 0)
@@ -308,7 +305,6 @@ def = VARselect(ROE_BRADESCO$ROE, lag.max = 12, season = 12, type = "const")
 #
 
 #-------FAZENDO O VAR---------
-
 #VAR PARA O BANCO DO BRASIL
 VAR_BB <- VAR(cbind(ROE_BB$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
               p = 1,  
@@ -318,7 +314,6 @@ VAR_BB <- VAR(cbind(ROE_BB$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
 #0.5967  -0.1281   4.6492
 # O ROE depende positivamente de seu própio valor defasado (59,67%)
 #Aumento de 1 p.p reduz o roe em 0,13, sugere efeito negativo da selic no roe
-
 
 
 #VAR PARA O SANTANDER
@@ -364,4 +359,3 @@ VAR_BRADESCO <- VAR(cbind(ROE_BRADESCO$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
 #0.6567  -0.1032   3.5886  
 # O ROE depende positivamente de seu própio valor defasado (0,6567%)
 #Aumento de 1 p.p reduz o roe em 0,1032%, sugere efeito negativo da selic no roe
-
