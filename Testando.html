@@ -13,7 +13,7 @@
 
 <meta name="date" content="2025-11-04" />
 
-<title>Testando</title>
+<title>Tratando IF Data Bacen</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,16 +350,18 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Testando</h1>
+<h1 class="title toc-ignore">Tratando IF Data Bacen</h1>
 <h4 class="author">Juan Doudement</h4>
 <h4 class="date">2025-11-04</h4>
 
 </div>
 
 
+<pre class="r"><code>library(tinytex)</code></pre>
+<pre><code>## Warning: pacote &#39;tinytex&#39; foi compilado no R versão 4.5.2</code></pre>
 <div id="abrindo-os-data-frames-que-estão-no-workspace" class="section level1">
 <h1>Abrindo os data frames que estão no workspace</h1>
-<pre class="r"><code>save.image(&quot;Juan_Trabalho.RData&quot;)</code></pre>
+<pre class="r"><code>load(&quot;Juan_Trabalho.RData&quot;)</code></pre>
 </div>
 <div id="tratando-o-df-passivo-para-encontrar-o-patrimonio-líquido" class="section level1">
 <h1>Tratando o df passivo para encontrar o patrimonio líquido</h1>
@@ -368,115 +370,29 @@ display: none;
   dplyr::select(Instituição, Código, Data, `Patrimônio.Líquido..j.`) %&gt;%
   rename(Patrimônio_Líquido = `Patrimônio.Líquido..j.`)
   Patrimônio_Líquido &lt;- na.omit(Patrimônio_Líquido)</code></pre>
-<pre class="r"><code>head(Passivo$`03_2020_Passivo.csv`,5)</code></pre>
-<pre><code>##               Instituição Código TCB SR TD TC    Cidade UF    Data
-## 1                             NA           NA                     
-## 2                             NA           NA                     
-## 3                    ITAU  10069  b1 S1  C  2 SAO PAULO SP 03/2020
-## 4                      BB  49906  b1 S1  C  1  BRASILIA DF 03/2020
-## 5 CAIXA ECONOMICA FEDERAL 360305  b1 S1  I  1  BRASILIA DF 03/2020
-##                Captações                          X
-## 1         Depósito Total                           
-## 2 Depósitos à Vista (a1) Depósitos de Poupança (a2)
-## 3            116.670.799                149.605.478
-## 4             71.406.857                181.647.716
-## 5             35.937.273                321.106.203
-##                               X.1                    X.2                   X.3
-## 1                                                                             
-## 2 Depósitos Interfinanceiros (a3) Depósitos a Prazo (a4) Outros Depósitos (a5)
-## 3                       4.719.622            383.288.172               742.638
-## 4                      34.713.137            234.491.724             9.019.800
-## 5                         121.329            169.303.468            10.928.816
-##                  X.4                                         X.5
-## 1                    Obrigações por Operações Compromissadas (b)
-## 2 Depósito Total (a)                                            
-## 3        655.026.710                                 335.051.247
-## 4        531.279.235                                 496.752.191
-## 5        537.397.090                                 159.282.334
-##                                        X.6
-## 1 Recursos de Aceites e Emissão de Títulos
-## 2       Letras de Crédito Imobiliário (c1)
-## 3                                4.692.795
-## 4                               14.640.725
-## 5                               46.684.734
-##                                     X.7                     X.8
+<pre class="r"><code>head(Passivo_06.2020,10)</code></pre>
+<pre><code>##       Data                                          Instituição
 ## 1                                                              
-## 2 Letras de Crédito do Agronegócio (c2) Letras Financeiras (c3)
-## 3                            22.411.429              61.039.783
-## 4                            72.835.415                 732.861
-## 5                               271.171               1.510.954
-##                                                             X.9
-## 1                                                              
-## 2 Obrigações por Títulos e Valores Mobiliários no Exterior (c4)
-## 3                                                    59.547.908
-## 4                                                    30.716.066
-## 5                                                     2.775.120
-##                                                   X.10
-## 1                                                     
-## 2 Outros Recursos de Aceites e Emissão de Títulos (c5)
-## 3                                            6.454.038
-## 4                                                4.190
-## 5                                              854.938
-##                                           X.11
-## 1                                             
-## 2 Recursos de Aceites e Emissão de Títulos (c)
-## 3                                  154.145.953
-## 4                                  118.929.258
-## 5                                   52.096.917
-##                                        X.12
-## 1 Obrigações por Empréstimos e Repasses (d)
-## 2                                          
-## 3                                93.626.197
-## 4                                78.077.480
-## 5                               324.449.409
-##                                    X.13 Instrumentos.Derivativos..f.
-## 1 Captações (e) = (a) + (b) + (c) + (d)                             
-## 2                                                                   
-## 3                         1.237.850.107                  129.182.647
-## 4                         1.225.038.164                    4.809.477
-## 5                         1.073.225.751                    1.262.167
-##   Outras.Obrigações..g.
-## 1                      
-## 2                      
-## 3           356.033.323
-## 4           249.001.623
-## 5           185.809.570
-##   Passivo.Circulante.e.Exigível.a.Longo.Prazo..h.....e.....f.....g.
-## 1                                                                  
-## 2                                                                  
-## 3                                                     1.723.066.077
-## 4                                                     1.478.849.263
-## 5                                                     1.260.297.487
-##   Resultados.de.Exercícios.Futuros..i. Patrimônio.Líquido..j.
-## 1                                                            
-## 2                                                            
-## 3                            2.650.152            135.860.018
-## 4                               91.761            102.711.525
-## 5                            1.000.000             53.131.194
-##   Passivo.Total..k.....h.....i.....j. X.14
-## 1                                       NA
-## 2                                       NA
-## 3                       1.861.576.247   NA
-## 4                       1.581.652.548   NA
-## 5                       1.314.428.681   NA</code></pre>
-<pre class="r"><code>Passivo_06.2020 &lt;- Passivo$`06_2000_Passivo.csv` %&gt;%
-  dplyr::select(
-    Data,
-    Instituição,
-    Patrimônio.Líquido..j.)</code></pre>
-<pre class="r"><code>head(Passivo_06.2020,5)</code></pre>
-<pre><code>##      Data                                          Instituição
-## 1                                                             
-## 2                                                             
-## 3 06/2000                                                   BB
-## 4 06/2000                              CAIXA ECONOMICA FEDERAL
-## 5 06/2000 BANCO NACIONAL DE DESENVOLVIMENTO ECONOMICO E SOCIAL
-##   Patrimônio.Líquido..j.
-## 1                       
-## 2                       
-## 3              7.528.220
-## 4              3.959.143
-## 5             11.634.815</code></pre>
+## 2                                                              
+## 3  06/2020                                                 ITAU
+## 4  06/2020                                                   BB
+## 5  06/2020                              CAIXA ECONOMICA FEDERAL
+## 6  06/2020                                             BRADESCO
+## 7  06/2020                                            SANTANDER
+## 8  06/2020 BANCO NACIONAL DE DESENVOLVIMENTO ECONOMICO E SOCIAL
+## 9  06/2020                                          BTG PACTUAL
+## 10 06/2020                                                SAFRA
+##    Patrimônio.Líquido..j.
+## 1                        
+## 2                        
+## 3             137.830.549
+## 4             105.454.075
+## 5              55.880.760
+## 6             136.909.208
+## 7              77.395.834
+## 8              98.495.331
+## 9              25.577.270
+## 10             12.640.315</code></pre>
 </div>
 <div id="tratando-faltantes-para-pl" class="section level1">
 <h1>Tratando faltantes para PL</h1>
@@ -484,6 +400,7 @@ display: none;
 <li>Tive que refazer por que estava sem valores para alguns anos devido
 ao no da coluna</li>
 </ul>
+<pre class="r"><code>head(Ativo_Total,25)</code></pre>
 <pre><code>##                         Instituição   Código    Data Ativo_Total TCB
 ## 1                                BB    49906 03/2000 126.009.362  b1
 ## 2           CAIXA ECONOMICA FEDERAL   360305 03/2000 124.494.699  b1
