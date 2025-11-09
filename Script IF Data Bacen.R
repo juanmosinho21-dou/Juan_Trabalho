@@ -5,6 +5,7 @@
 #3 - Medir SPREAD bancário 
 
 #-------LIBRARY PACOTES-------
+
 library(dplyr)
 library(GetBCBData)
 library(xts)
@@ -18,9 +19,11 @@ library(purrr)
 library(stringr)
 library(writexl)
 library(tidyverse)
+
 #-------INFORMATIVENESS---------
 #Puxar os dados para fazer a mesma analise para o spread e tvm
-#system("git add Testando25.pdf") <- para adicionar arquivo no github pelo console
+#system("git add Testando25.pdf") <- para adicionar arquivo no git pelo console
+#Perguntar ao professor se pode colocar 
 #-------CAMINHO do ZIP-----------
 
 # Caminho do zip
@@ -144,7 +147,6 @@ AT_6 <- Ativo_Total %>%
   head(6)
 
 #-----------CALCULATION O ROE---------------
-
 Lucro_Líquido <- Lucro_Líquido %>%
   mutate(Lucro_Líquido = as.numeric(gsub(",", ".", gsub("\\.", "", Lucro_Líquido))))
 
@@ -178,8 +180,7 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC %>%
   group_by(Trimestre) %>%
   summarise(
     SELIC_Média = mean(value, na.rm = TRUE),
-    SELIC_Fim = last(value)                   
-  )
+    SELIC_Fim = last(value) )
 
 #---------TAXA SELIC TRIMESTRAL----------------
 Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
@@ -198,6 +199,7 @@ Taxa_SELIC_Trimestral <- Taxa_SELIC_Trimestral %>%
   dplyr::select(Data, SELIC_Média, SELIC_Fim)
 
 #---------ROE INDIVIDUALMENTE----------
+
 ROE_BB <- ROE_testando_todos %>%
   filter(Código %in% ("49906")) %>%
   dplyr::select(Data, Código, Instituição, ROE)
@@ -229,88 +231,114 @@ ROE_ITAU <- na.omit(ROE_ITAU)
 
 
 #---------ADF INDIVIDUALMENTE------
-#Teste ADF para Taxa SELIC
 
-Taxa_SELIC <- ur.df(Taxa_SELIC_Trimestral$SELIC_Média, type = "drift", lags = 0)
-summary(Taxa_SELIC)
-#Não é estacionaria
+#Teste ADF para Taxa SELIC
+#Coloquei em gráfico para verificar se havia constância e tendência
+
+plot(Taxa_SELIC_Trimestral$SELIC_Fim, type = "l", main = "Série temporal")
+
+Df_Taxa_Selic <- adf.test(Taxa_SELIC_Trimestral$SELIC_Fim)
+summary(Df_Taxa_Selic)
+#data:  Taxa_SELIC_Trimestral$SELIC_Fim
+#Dickey-Fuller = -2.2807, Lag order = 4, p-value = 0.4604
+#alternative hypothesis: stationary
+
 
 # Teste ADF para ROE DO BANCO DO BRASIL
-Df_BB <- ur.df(ROE_BB$ROE, type = "drift", lags = 0)
+
+plot(ROE_BB$ROE, type = "l", main = "Série temporal")
+
+Df_BB <- adf.test(ROE_BB$ROE)
 summary(Df_BB)
-#Estacinária para todos os nível de significância 1%,5% e 10%
 
-
-# Teste ADF para ROE DO SANTANDER
-ROE_BRADESCO <- ur.df(ROE_BRADESCO$ROE, type = "drift", lags = 0)
-summary(ROE_BRADESCO)
-#Estacinária para todos os nível de significância 1%,5% e 10%
+#Augmented Dickey-Fuller Test
+#data:  ROE_BB$ROE
+#Dickey-Fuller = -3.0473, Lag order = 4, p-value = 0.1428
+#alternative hypothesis: stationary
 
 
 # Teste ADF para ROE DO CAIXA
-ROE_CAIXA <- ur.df(ROE_CAIXA$ROE, type = "drift", lags = 0)
-summary(ROE_CAIXA)
-#Estacinária para todos os nível de significância 1%,5% e 10%
 
+Df_CAIXA <- adf.test(ROE_CAIXA$ROE)
+summary(Df_CAIXA)
 
-# Teste ADF para ROE DO ITAU
-ROE_ITAU <- ur.df(ROE_ITAU$ROE, type = "drift", lags = 0)
-summary(ROE_ITAU)
-#Estacinária para todos os nível de significância 1%,5% e 10%
+#Augmented Dickey-Fuller Test
+#data:  ROE_CAIXA$ROE
+#Dickey-Fuller = -4.2465, Lag order = 4, p-value = 0.01
+#alternative hypothesis: stationary
 
 
 # Teste ADF para ROE DO SANTANDER
-ROE_SANTANDER <- ur.df(ROE_SANTANDER$ROE, type = "drift", lags = 0)
-summary(ROE_SANTANDER)
-#Estacinária para todos os nível de significância 1%,5% e 10%
+plot(ROE_SANTANDER$ROE, type = "l", main = "Série temporal")
+
+Df_SANTANDER <- adf.test(ROE_SANTANDER$ROE)
+summary(Df_SANTANDER)
+
+#Augmented Dickey-Fuller Test
+#data:  ROE_SANTANDER$ROE
+#Dickey-Fuller = -4.7036, Lag order = 4, p-value = 0.01
+#alternative hypothesis: stationary
 
 
-#Irei fazer o var com nível de significância de 5%
+# Teste ADF para ROE DO ITAU
 
-#--------JUNTADO OS DATA FRAME-----------------
-Var_Santander <-  left_join(ROE_BRADESCO, Taxa_SELIC_Trimestral, 
-                            copy = FALSE, suffix = c("Selic","Roe"))
+plot(ROE_ITAU$ROE, type = "l", main = "Série temporal")
+
+Df_Itaú <- adf.test(ROE_SANTANDER$ROE)
+summary(Df_Itaú)
+
+
+# Teste ADF para ROE DO BRADESCO
+
+plot(ROE_BRADESCO$ROE, type = "l", main = "Série temporal")
+
+Df_BRADESCO <- adf.test(ROE_BRADESCO$ROE)
+summary(Df_SANTANDER)
+
 
 #------DETERMINANDO A ORDEM DE DEFASAGEM---------
 
-#DEFININFO DEFASAGEM PARA O SANTANDER
-def = VARselect(ROE_SANTANDER$ROE, lag.max = 12, season = 12, type = "const")
+#DEFININDO A TAXA SELIC
+def = VARselect(Taxa_SELIC_Trimestral$SELIC_Fim, lag.max = 12, season = 12, type = "const")
+#AIC(n)  HQ(n)  SC(n) FPE(n) 
+#5      5      4      5 
 
+#DEFININDO DEFASAGEM PARA O SANTANDER
+def = VARselect(ROE_SANTANDER$ROE, lag.max = 12, season = 12, type = "const")
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #1      1      1      1 
 
-#DEFININFO DEFASAGEM PARA O BANCO DO BRASIL
+#DEFININDO DEFASAGEM PARA O BANCO DO BRASIL
 def = VARselect(ROE_BB$ROE, lag.max = 12, season = 12, type = "const")
 
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #2      2      2      2 
 
-#DEFININFO DEFASAGEM PARA O CAIXA
+#DEFININDO DEFASAGEM PARA O CAIXA
 def = VARselect(ROE_CAIXA$ROE, lag.max = 12, season = 12, type = "const")
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #1      1      1      1 
 
-#DEFININFO DEFASAGEM PARA O ITAU
+#DEFININDO DEFASAGEM PARA O ITAU
 def = VARselect(ROE_ITAU$ROE, lag.max = 12, season = 12, type = "const")
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #8      3      2      8 
 
-#DEFININFO DEFASAGEM PARA O BRADESCO
+#DEFININDO DEFASAGEM PARA O BRADESCO
 def = VARselect(ROE_BRADESCO$ROE, lag.max = 12, season = 12, type = "const")
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #8      3      1      8 
-
-#COM NÍVEL DE 5% DE SIGNIFICANCIA ULTILIZANDO SC COM 1 DE DEFASAGEM
-
 #
 
 #-------FAZENDO O VAR---------
+
 #VAR PARA O BANCO DO BRASIL
 VAR_BB <- VAR(cbind(ROE_BB$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
-              p = 1,  
+              p = 2,  
               type = "const")
+
 #Coefficients:
-#  y1.l1    y2.l1    const  
+#  y1.l1    y2.l1    const
 #0.5967  -0.1281   4.6492
 # O ROE depende positivamente de seu própio valor defasado (59,67%)
 #Aumento de 1 p.p reduz o roe em 0,13, sugere efeito negativo da selic no roe
