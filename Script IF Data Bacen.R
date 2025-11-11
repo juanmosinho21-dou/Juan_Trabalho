@@ -21,9 +21,12 @@ library(writexl)
 library(tidyverse)
 
 #-------INFORMATIVENESS---------
+
 #Puxar os dados para fazer a mesma analise para o spread e tvm
 #system("git add Testando25.pdf") <- para adicionar arquivo no git pelo console
-#Perguntar ao professor se pode colocar 
+#Perguntar ao professor como se faz o criteiro de defasagem estando difente Selic X ROE de banco X
+#Qual colocar?
+
 #-------CAMINHO do ZIP-----------
 
 # Caminho do zip
@@ -239,10 +242,10 @@ plot(Taxa_SELIC_Trimestral$SELIC_Fim, type = "l", main = "Série temporal")
 
 Df_Taxa_Selic <- adf.test(Taxa_SELIC_Trimestral$SELIC_Fim)
 summary(Df_Taxa_Selic)
+
 #data:  Taxa_SELIC_Trimestral$SELIC_Fim
 #Dickey-Fuller = -2.2807, Lag order = 4, p-value = 0.4604
 #alternative hypothesis: stationary
-
 
 # Teste ADF para ROE DO BANCO DO BRASIL
 
@@ -258,6 +261,7 @@ summary(Df_BB)
 
 
 # Teste ADF para ROE DO CAIXA
+plot(ROE_CAIXA$ROE, type = "l", main = "Série temporal")
 
 Df_CAIXA <- adf.test(ROE_CAIXA$ROE)
 summary(Df_CAIXA)
@@ -284,8 +288,15 @@ summary(Df_SANTANDER)
 
 plot(ROE_ITAU$ROE, type = "l", main = "Série temporal")
 
-Df_Itaú <- adf.test(ROE_SANTANDER$ROE)
+Df_Itaú <- adf.test(ROE_ITAU$ROE)
 summary(Df_Itaú)
+
+#Augmented Dickey-Fuller Test
+#data:  ROE_ITAU$ROE
+#Dickey-Fuller = -2.0933, Lag order = 4, p-value = 0.538
+#alternative hypothesis: stationary
+
+"Não é estacionária"
 
 
 # Teste ADF para ROE DO BRADESCO
@@ -295,93 +306,92 @@ plot(ROE_BRADESCO$ROE, type = "l", main = "Série temporal")
 Df_BRADESCO <- adf.test(ROE_BRADESCO$ROE)
 summary(Df_SANTANDER)
 
+#Augmented Dickey-Fuller Test
+#data: ROE_BRADESCO$ROE
+#Dickey-Fuller = -1.9171, Lag order = 4, p-value = 0.611
+#alternative hypothesis: stationary
+
+"Não é estacionária"
 
 #------DETERMINANDO A ORDEM DE DEFASAGEM---------
 
-#DEFININDO A TAXA SELIC
-def = VARselect(Taxa_SELIC_Trimestral$SELIC_Fim, lag.max = 12, season = 12, type = "const")
+#DEFININDO A TAXA SELIC -> SC(n) 2
+VARselect(Taxa_SELIC_Trimestral$SELIC_Fim) 
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
-#5      5      4      5 
+#4      4      2      4 
 
-#DEFININDO DEFASAGEM PARA O SANTANDER
-def = VARselect(ROE_SANTANDER$ROE, lag.max = 12, season = 12, type = "const")
+#DEFININDO DEFASAGEM PARA O SANTANDER -> SC(n) 1
+VARselect(ROE_SANTANDER$ROE)
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #1      1      1      1 
 
-#DEFININDO DEFASAGEM PARA O BANCO DO BRASIL
-def = VARselect(ROE_BB$ROE, lag.max = 12, season = 12, type = "const")
-
+#DEFININDO DEFASAGEM PARA O BANCO DO BRASIL -> SC(n) 2
+VARselect(ROE_BB$ROE)
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #2      2      2      2 
 
-#DEFININDO DEFASAGEM PARA O CAIXA
-def = VARselect(ROE_CAIXA$ROE, lag.max = 12, season = 12, type = "const")
+#DEFININDO DEFASAGEM PARA O CAIXA -> SC(n) 1
+VARselect(ROE_CAIXA$ROE)
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #1      1      1      1 
 
-#DEFININDO DEFASAGEM PARA O ITAU
-def = VARselect(ROE_ITAU$ROE, lag.max = 12, season = 12, type = "const")
+#DEFININDO DEFASAGEM PARA O ITAU -> SC(n) 2
+VARselect(ROE_ITAU$ROE)
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
-#8      3      2      8 
+#6      3      2      6 
 
-#DEFININDO DEFASAGEM PARA O BRADESCO
-def = VARselect(ROE_BRADESCO$ROE, lag.max = 12, season = 12, type = "const")
+#DEFININDO DEFASAGEM PARA O BRADESCO -> SC(n) 1
+VARselect(ROE_BRADESCO$ROE)
 #AIC(n)  HQ(n)  SC(n) FPE(n) 
 #8      3      1      8 
-#
 
-#-------FAZENDO O VAR---------
+#---------VAR-----------
 
 #VAR PARA O BANCO DO BRASIL
-VAR_BB <- VAR(cbind(ROE_BB$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
-              p = 2,  
-              type = "const")
+VAR_BB <- VAR(cbind(ROE = ROE_BB$ROE, 
+    SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 2,  type = "const")
 
 #Coefficients:
 #  y1.l1    y2.l1    const
-#0.5967  -0.1281   4.6492
+#0.5967  -0.2729119   3.2708951
 # O ROE depende positivamente de seu própio valor defasado (59,67%)
-#Aumento de 1 p.p reduz o roe em 0,13, sugere efeito negativo da selic no roe
-
+#Aumento de 1 p.p reduz o roe em 0,2729119, sugere efeito negativo da selic no roe
 
 #VAR PARA O SANTANDER
-VAR_SANTANDER <- VAR(cbind(ROE_SANTANDER$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
-              p = 1,  
-              type = "const")
-#Coefficients:
-#y1.l1     y2.l1     const  
-#-0.06755  -0.38550   8.93252 
-# O ROE depende positivamente de seu própio valor defasado (-0,06755%)
-#Aumento de 1 p.p reduz o roe em 0,39%, sugere efeito negativo da selic no roe
+VAR_SANTANDER <- VAR(cbind(ROE = ROE_SANTANDER$ROE, 
+    SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 1,   type = "const")
 
+#Coefficients:
+#  y1.l1     y2.l1     const  
+#-0.06755  -0.38550   8.93252 
+# O ROE tem efeito negativo sobre seu propio valor no cp (-0,06755%)
+#Aumento de 1 p.p reduz o roe em 39%, sugere efeito negativo da selic no roe
 
 #VAR PARA O ITAU
-VAR_ITAU <- VAR(cbind(ROE_ITAU$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
-                     p = 1,  
-                     type = "const")
-#Coefficients:
-#y1.l1    y2.l1    const  
-#0.2771  -0.2407   8.5467  
-# O ROE depende positivamente de seu própio valor defasado (0,2771%)
-#Aumento de 1 p.p reduz o roe em 0,24%, sugere efeito negativo da selic no roe
+VAR_ITAU <- VAR(cbind(ROE = ROE_ITAU$ROE, 
+  SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 2, type = "const", ic = ("SC"))
 
+#y1.l1      y2.l1         const 
+#0.2184639 -0.3188805    6.4584815 
+# O ROE depende positivamente de seu própio valor defasado (0,2184639%)
+#Aumento de 1 p.p reduz o roe em 31,85%, sugere efeito negativo da selic no roe
 
 #VAR PARA O CAIXA
-VAR_CAIXA <- VAR(cbind(ROE_CAIXA$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
-                p = 1,  
-                type = "const")
-#Coefficients:
-#y1.l1     y2.l1     const  
-#0.05752  -0.41188  11.75614 
-# O ROE depende positivamente de seu própio valor defasado (0,05752%)
-#Aumento de 1 p.p reduz o roe em 0,41188%, sugere efeito negativo da selic no roe
+VAR_CAIXA <- VAR(cbind(ROE = ROE_CAIXA$ROE, 
+              SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 1, type = "const")
 
+#Coefficients:
+#y1.l1       y2.l1       const 
+#0.05751775 -0.41187828 11.75613751 
+# O ROE depende positivamente de seu própio valor defasado (0,05752%)
+#Aumento de 1 p.p reduz o roe em 41,18%, sugere efeito negativo da selic no roe
 
 
 #VAR PARA O BRADESCO
-VAR_BRADESCO <- VAR(cbind(ROE_BRADESCO$ROE, Taxa_SELIC_Trimestral$SELIC_Fim),
-                p = 1,  
-                type = "const")
+VAR_BRADESCO <- VAR(cbind(ROE = ROE_BRADESCO$ROE,
+    SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 1,type = "const")
+
+
 #Coefficients:
 #y1.l1    y2.l1    const  
 #0.6567  -0.1032   3.5886  
