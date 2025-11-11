@@ -153,9 +153,6 @@ AT_6 <- Ativo_Total %>%
 Lucro_Líquido <- Lucro_Líquido %>%
   mutate(Lucro_Líquido = as.numeric(gsub(",", ".", gsub("\\.", "", Lucro_Líquido))))
 
-Patrimônio_Líquido <- Patrimônio_Líquido %>%
-  mutate(Patrimônio_Líquido = as.numeric(gsub(",", ".", gsub("\\.", "", Patrimônio_Líquido))))
-
 ROE_testando_todos <- Lucro_Líquido %>%
   left_join(Patrimônio_Líquido, by = c("Instituição", "Data", "Código")) %>%
   mutate(ROE = (Lucro_Líquido / Patrimônio_Líquido) * 100)
@@ -390,7 +387,6 @@ VAR_CAIXA <- VAR(cbind(ROE = ROE_CAIXA$ROE,
 #VAR PARA O BRADESCO
 VAR_BRADESCO <- VAR(cbind(ROE = ROE_BRADESCO$ROE,
     SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 1,type = "const")
-
 
 #Coefficients:
 #y1.l1    y2.l1    const  
