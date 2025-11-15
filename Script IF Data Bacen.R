@@ -24,8 +24,6 @@ library(tidyverse)
 
 #Puxar os dados para fazer a mesma analise para o spread e tvm
 #system("git add Testando25.pdf") <- para adicionar arquivo no git pelo console
-#Perguntar ao professor como se faz o criteiro de defasagem estando difente Selic X ROE de banco X
-#Qual colocar?
 
 #-------CAMINHO do ZIP-----------
 
