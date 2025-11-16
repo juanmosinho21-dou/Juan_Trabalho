@@ -24,7 +24,8 @@ library(tidyverse)
 
 #Puxar os dados para fazer a mesma analise para o spread e tvm
 #system("git add Testando25.pdf") <- para adicionar arquivo no git pelo console
-#Ajustar o teste df
+#Tirei a primeira diferença e alguns ficarão com 99 obs (os não estacionarios) 
+#e os que eram estacionario ficaram com 100.
 
 #-------CAMINHO do ZIP-----------
 
@@ -230,12 +231,13 @@ ROE_ITAU <- na.omit(ROE_ITAU)
 
 
 #---------ADF INDIVIDUALMENTE------
+#---------ADF SELIC------
 
 #Teste ADF para Taxa SELIC
 #Coloquei em gráfico para verificar se havia constância e tendência
+#O objetivo é rejeitar H0
 
 plot(Taxa_SELIC_Trimestral$SELIC_Fim, type = "l", main = "Série temporal")
-
 Df_Taxa_Selic <- adf.test(Taxa_SELIC_Trimestral$SELIC_Fim)
 summary(Df_Taxa_Selic)
 
@@ -243,6 +245,19 @@ summary(Df_Taxa_Selic)
 #Dickey-Fuller = -2.2807, Lag order = 4, p-value = 0.4604
 #alternative hypothesis: stationary
 
+"TEREMOS QUE TIRAR A PRIMEIRA DIFERENÇA"
+
+Taxa_Selic_Trimestral_diff <- diff(Taxa_SELIC_Trimestral$SELIC_Fim)
+adf.test(Taxa_Selic_Trimestral_diff)
+Df_Taxa_SELIC <- adf.test(Taxa_Selic_Trimestral_diff)
+
+#Augmented Dickey-Fuller Test
+#data:  Taxa_Selic_Trimestral_diff
+#Dickey-Fuller = -4.6381, Lag order = 4, p-value = 0.01
+#alternative hypothesis: stationary
+#Rejeitamos H0
+
+#---------ADF BANCO DO BRASIL------
 
 # Teste ADF para ROE DO BANCO DO BRASIL
 plot(ROE_BB$ROE, type = "l", main = "Série temporal")
@@ -253,8 +268,9 @@ summary(Df_BB)
 #data:  ROE_BB$ROE
 #Dickey-Fuller = -3.0473, Lag order = 4, p-value = 0.1428
 #alternative hypothesis: stationary
+#Minha interpretação, o p-valor está muito grande. Por isso aqui foi rejeitada
 
-#APLICANDO A PRIMEIRA DIFERENÇA
+#TEREMOS QUE TIRAR A PRIMEIRA DIFERENÇA
 ROE_BB_diff <- diff(ROE_BB$ROE)
 adf.test(ROE_BB_diff)
 Df_BB <- adf.test(ROE_BB_diff)
@@ -264,8 +280,9 @@ Df_BB <- adf.test(ROE_BB_diff)
 #Data:  ROE_BB_diff
 #dickey-Fuller = -4.3947, Lag order = 4, p-value = 0.01
 #alternative hypothesis: stationary
+#Só agora rejeitamos H0
 
-
+#---------ADF CAIXA------
 
 # Teste ADF para ROE DO CAIXA
 plot(ROE_CAIXA$ROE, type = "l", main = "Série temporal")
@@ -279,6 +296,8 @@ summary(Df_CAIXA)
 #alternative hypothesis: stationary
 
 
+#---------ADF SANTANDER------
+
 # Teste ADF para ROE DO SANTANDER
 plot(ROE_SANTANDER$ROE, type = "l", main = "Série temporal")
 
@@ -290,8 +309,7 @@ summary(Df_SANTANDER)
 #Dickey-Fuller = -4.7036, Lag order = 4, p-value = 0.01
 #alternative hypothesis: stationary
 
-
-# Teste ADF para ROE DO ITAU
+#---------ADF ITAÚ------
 
 plot(ROE_ITAU$ROE, type = "l", main = "Série temporal")
 
@@ -302,11 +320,22 @@ summary(Df_Itaú)
 #data:  ROE_ITAU$ROE
 #Dickey-Fuller = -2.0933, Lag order = 4, p-value = 0.538
 #alternative hypothesis: stationary
+#Não rejeitamos H0
 
-"Não é estacionária"
+"TEREMOS QUE TIRAR A PRIMEIRA DIFERENÇA"
+ROE_ITAÚ_diff <- diff(ROE_ITAU$ROE)
+adf.test(ROE_ITAÚ_diff)
+Df_Itaú <- adf.test(ROE_ITAÚ_diff)
+
+#Augmented Dickey-Fuller Test
+
+#data:  ROE_ITAÚ_diff
+#Dickey-Fuller = -4.9437, Lag order = 4, p-value = 0.01
+#alternative hypothesis: stationary
+#Rejeitamos H0
 
 
-# Teste ADF para ROE DO BRADESCO
+#---------ADF BRADESCO------
 
 plot(ROE_BRADESCO$ROE, type = "l", main = "Série temporal")
 
@@ -318,7 +347,16 @@ summary(Df_BRADESCO)
 #Dickey-Fuller = -1.9171, Lag order = 4, p-value = 0.611
 #alternative hypothesis: stationary
 
-"Não é estacionária"
+"TEREMOS QUE TIRAR A PRIMEIRA DIFERENÇA"
+ROE_BRADESCO_diff <- diff(ROE_BRADESCO$ROE)
+adf.test(ROE_BRADESCO_diff)
+Df_BRADESCO <- adf.test(ROE_BRADESCO_diff)
+
+#Augmented Dickey-Fuller Test
+#data:  ROE_BRADESCO_diff
+#Dickey-Fuller = -4.7821, Lag order = 4, p-value = 0.01
+#alternative hypothesis: stationary
+#Rejeitamos H0
 
 #------DETERMINANDO A ORDEM DE DEFASAGEM---------
 
@@ -353,6 +391,7 @@ VARselect(ROE_BRADESCO$ROE)
 #8      3      1      8 
 
 #---------VAR-----------
+
 #VAR PARA O BANCO DO BRASIL
 VAR_BB <- VAR(cbind(ROE = ROE_BB$ROE, 
     SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 2,  type = "const")
