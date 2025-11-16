@@ -24,6 +24,7 @@ library(tidyverse)
 
 #Puxar os dados para fazer a mesma analise para o spread e tvm
 #system("git add Testando25.pdf") <- para adicionar arquivo no git pelo console
+#Ajustar o teste df
 
 #-------CAMINHO do ZIP-----------
 
@@ -242,10 +243,9 @@ summary(Df_Taxa_Selic)
 #Dickey-Fuller = -2.2807, Lag order = 4, p-value = 0.4604
 #alternative hypothesis: stationary
 
+
 # Teste ADF para ROE DO BANCO DO BRASIL
-
 plot(ROE_BB$ROE, type = "l", main = "Série temporal")
-
 Df_BB <- adf.test(ROE_BB$ROE)
 summary(Df_BB)
 
@@ -253,6 +253,18 @@ summary(Df_BB)
 #data:  ROE_BB$ROE
 #Dickey-Fuller = -3.0473, Lag order = 4, p-value = 0.1428
 #alternative hypothesis: stationary
+
+#APLICANDO A PRIMEIRA DIFERENÇA
+ROE_BB_diff <- diff(ROE_BB$ROE)
+adf.test(ROE_BB_diff)
+Df_BB <- adf.test(ROE_BB_diff)
+
+#Augmented Dickey-Fuller Test
+
+#Data:  ROE_BB_diff
+#dickey-Fuller = -4.3947, Lag order = 4, p-value = 0.01
+#alternative hypothesis: stationary
+
 
 
 # Teste ADF para ROE DO CAIXA
@@ -299,7 +311,7 @@ summary(Df_Itaú)
 plot(ROE_BRADESCO$ROE, type = "l", main = "Série temporal")
 
 Df_BRADESCO <- adf.test(ROE_BRADESCO$ROE)
-summary(Df_SANTANDER)
+summary(Df_BRADESCO)
 
 #Augmented Dickey-Fuller Test
 #data: ROE_BRADESCO$ROE
@@ -341,7 +353,6 @@ VARselect(ROE_BRADESCO$ROE)
 #8      3      1      8 
 
 #---------VAR-----------
-
 #VAR PARA O BANCO DO BRASIL
 VAR_BB <- VAR(cbind(ROE = ROE_BB$ROE, 
     SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 2,  type = "const")
