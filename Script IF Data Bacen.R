@@ -392,6 +392,8 @@ VARselect(ROE_BRADESCO$ROE)
 
 #---------VAR-----------
 
+"RESULTADOS ANTERIORES, CONTINUAREI A FAZER"
+
 #VAR PARA O BANCO DO BRASIL
 VAR_BB <- VAR(cbind(ROE = ROE_BB$ROE, 
     SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 2,  type = "const")
