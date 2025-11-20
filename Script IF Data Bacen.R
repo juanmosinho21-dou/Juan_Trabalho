@@ -226,7 +226,6 @@ ROE_ITAU <- ROE_testando_todos %>%
   dplyr::select(Data, Código, Instituição, ROE)
 ROE_ITAU <- na.omit(ROE_ITAU)
 
-
 #---------ADF SELIC------
 
 #Teste ADF para Taxa SELIC
@@ -252,6 +251,14 @@ Df_Taxa_SELIC <- adf.test(Taxa_Selic_Trimestral_diff)
 #Dickey-Fuller = -4.6381, Lag order = 4, p-value = 0.01
 #alternative hypothesis: stationary
 #Rejeitamos H0
+
+
+"Ajustando o data frame para ficar no mesmo df e com a mesma data"
+
+Juntando_Taxa_Selic_Trimestral_diff <- data.frame(
+  Data = Taxa_SELIC_Trimestral$Data[-1],
+  Diff_SELIC = Taxa_Selic_Trimestral_diff)
+
 
 #---------ADF BANCO DO BRASIL------
 
@@ -330,6 +337,11 @@ Df_Itaú <- adf.test(ROE_ITAÚ_diff)
 #alternative hypothesis: stationary
 #Rejeitamos H0
 
+"Juntando na mesma data os valores defasados"
+
+Juntando_ROE_ITAÚ_diff <- data.frame(
+  Data = ROE_ITAU$Data[-1],
+  Diff_ITAÚ = ROE_ITAÚ_diff)
 
 #---------ADF BRADESCO------
 
@@ -353,6 +365,12 @@ Df_BRADESCO <- adf.test(ROE_BRADESCO_diff)
 #Dickey-Fuller = -4.7821, Lag order = 4, p-value = 0.01
 #alternative hypothesis: stationary
 #Rejeitamos H0
+
+
+Taxa_Selic_Trimestral_diff <- data.frame(
+  Data = ROE_ITAU$Data[-1],
+  Diff_SELIC = diff(ROE_ITAÚ_diff)
+)
 
 #------DETERMINANDO A ORDEM DE DEFASAGEM---------
 
@@ -409,12 +427,12 @@ VAR_SANTANDER <- VAR(cbind(ROE = ROE_SANTANDER$ROE,
 #Aumento de 1 p.p na SELIC reduz o roe em 39%, sugere efeito negativo da selic no roe
 
 "VAR PARA O ITAU"
-VAR_ITAU <- VAR(cbind(ROE = ROE_ITAÚ_diff, 
-  SELIC = Taxa_Selic_Trimestral_diff), p = 2, type = "const", ic = ("SC"))
+VAR_ITAU <- VAR(cbind(ROE = ROE_ITAU$ROE, 
+  SELIC = Taxa_SELIC_Trimestral$SELIC_Fim), p = 2, type = "const", ic = ("SC"))
 
 #y1.l1      y2.l1         const 
 #-0.668550809 -0.3188805    0.005520623 
-# O ROE depende negativamente de seu própio valor defasado (-0.668550809%)
+# O ROE depende negativamente de seu própio valor defasado (-0.66855508%)
 #Aumento de 1 p.p na SELIC reduz o roe em 0,062903%, sugere efeito negativo da selic no roe
 
 
