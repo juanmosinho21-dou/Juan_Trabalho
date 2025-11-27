@@ -424,7 +424,7 @@ VAR_SANTANDER <- VAR(cbind(ROE = ROE_SANTANDER$ROE,
 #  y1.l1     y2.l1     const  
 #-0.06755  -0.38550   8.93252 
 # O ROE tem efeito negativo sobre seu propio valor no cp (-0,06755%)
-#Aumento de 1 p.p na SELIC reduz o roe em 39%, sugere efeito negativo da selic no roe
+#Aumento de 1 p.p na SELIC reduz o roe em 38,55%, sugere efeito negativo da selic no roe
 
 "VAR PARA O ITAU"
 VAR_ITAU <- VAR(cbind(ROE = ROE_ITAU$ROE, 
@@ -433,7 +433,7 @@ VAR_ITAU <- VAR(cbind(ROE = ROE_ITAU$ROE,
 #y1.l1      y2.l1         const 
 #-0.668550809 -0.3188805    0.005520623 
 # O ROE depende negativamente de seu própio valor defasado (-0.66855508%)
-#Aumento de 1 p.p na SELIC reduz o roe em 0,062903%, sugere efeito negativo da selic no roe
+#Aumento de 1 p.p na SELIC reduz o roe em 31,88%, sugere efeito negativo da selic no roe
 
 
 "VAR PARA O CAIXA"
@@ -455,4 +455,4 @@ VAR_BRADESCO <- VAR(cbind(ROE = ROE_BRADESCO_diff,
 #ROE.l1        SELIC.l1        const 
 #-0.21159441  -0.08784079  -0.04801772 
 # O ROE depende negativamente de seu própio valor defasado (0,2115%)
-#Aumento de 1 p.p reduz o roe em 0,008784%, sugere efeito negativo da selic no roe
+#Aumento de 1 p.p reduz o roe em 8.878%, sugere efeito negativo da selic no roe
