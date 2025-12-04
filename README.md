@@ -5,12 +5,11 @@ Este repositório contém o código e resultados do meu estudo aplicaddo na minh
 ### 🔍 Objetivos do estudo
 - Avaliar empiricamente a relação entre SELIC e ROE.
 - Estimar um modelo VAR (Vetor Autorregressivo).
-- Analisar funções Impulso-Resposta (IRF).
 - Verificar estacionariedade e raiz unitária (ADF, PP).
 - Interpretar efeitos dinâmicos e significância estatística.
 
 ### 📂 Estrutura do repositório
-- **/data/** – bases utilizadas (quando permitido)
+- **/data/** – IF data
 - **/scripts/** – códigos em R do VAR, IRF, testes ADF, PP, etc.
 - **/outputs/** – gráficos, tabelas e resultados gerados
 - **Trabalho.Rmd** – documento principal do estudo
