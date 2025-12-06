@@ -6,7 +6,7 @@ Este repositório reúne o material do meu trabalho de conclusão em Ciências E
 A pesquisa estima um modelo VAR para avaliar a reação do ROE dos bancos diante de variações na taxa SELIC. Foram utilizados dados trimestrais dos principais bancos listados na B3. A análise utiliza testes de estacionariedade, seleção de defasagens por AIC e funções impulso-resposta.
 
 ## 🧪 Metodologia
-- Testes ADF e PP para verificação de raiz unitária  
+- Testes ADF para verificação de raiz unitária  
 - Modelo VAR  
 - Testes de autocorrelação e estabilidade  
 
