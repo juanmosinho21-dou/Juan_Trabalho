@@ -17,7 +17,7 @@ A pesquisa estima um modelo VAR para avaliar a reação do ROE dos bancos diante
 
 ## 📁 Organização
 - `/scripts` — códigos em R  
-- `/graficos` — outputs do VAR  
+- `/data` — Especificação da escolha dos dados
 - `Trabalho.Rmd` — esboço d trabalho 
 
 ## 🧑‍💻 Ferramentas
