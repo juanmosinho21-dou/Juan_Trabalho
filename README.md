@@ -16,9 +16,9 @@ A pesquisa estima um modelo VAR para avaliar a reação do ROE dos bancos diante
 - Interpretação rigorosa da significância estatística
 
 ## 📁 Organização
-- `/scripts` — códigos em R  
-- `/data` — Especificação da escolha dos dados
-- `Trabalho.Rmd` — esboço d trabalho 
+- `/scripts` - códigos em R  
+- `/data` - Especificação da escolha dos dados
+- `Trabalho.Rmd` - esboço d trabalho 
 
 ## 🧑‍💻 Ferramentas
 R, R Markdown, vars, tseries, urca.
