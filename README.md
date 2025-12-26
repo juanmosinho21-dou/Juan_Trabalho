@@ -23,7 +23,7 @@ A pesquisa estima um modelo VAR para avaliar a reação do ROE dos bancos diante
 
 ## 🧑‍💻 Ferramentas
 R, R Markdown, tidyverse, vars, tseries, urca, forecast.
->>>>>>> 0998051711223cad8e09cdea695ece6df75a1eef
+
 =======
 - `/scripts` - códigos em R  
 - `/data` - Especificação da escolha dos dados
@@ -31,4 +31,3 @@ R, R Markdown, tidyverse, vars, tseries, urca, forecast.
 
 ## 🧑‍💻 Ferramentas
 R, R Markdown, vars, tseries, urca.
->>>>>>> d87f1de21a5a0faf87fdee04eadba79920511199
