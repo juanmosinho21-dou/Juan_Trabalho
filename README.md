@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 # Análise da Relação entre a Taxa SELIC e o ROE dos Maiores Bancos Brasileiros
 
 Este repositório contém o código e resultados do meu estudo aplicaddo na minha monografia em Economia, que investiga como a variação da taxa SELIC afeta o desempenho dos principais bancos brasileiros, medido pelo Retorno sobre o Patrimônio Líquido (ROE).
