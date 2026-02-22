@@ -443,3 +443,5 @@ summary(VAR_BRADESCO)
 #0.05376312 0.02155808 0.07498142 
 
 causality(VAR_BRADESCO, cause = "SELIC")
+
+
