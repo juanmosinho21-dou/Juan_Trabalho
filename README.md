@@ -1,28 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-# Análise da Relação entre a Taxa SELIC e o ROE dos Maiores Bancos Brasileiros
-
-Este repositório contém o código e resultados do meu estudo aplicaddo na minha monografia em Economia, que investiga como a variação da taxa SELIC afeta o desempenho dos principais bancos brasileiros, medido pelo Retorno sobre o Patrimônio Líquido (ROE).
-
-### 🔍 Objetivos do estudo
-- Avaliar empiricamente a relação entre SELIC e ROE.
-- Estimar um modelo VAR (Vetor Autorregressivo).
-- Verificar estacionariedade e raiz unitária (ADF).
-- Interpretar efeitos dinâmicos e significância estatística.
-
-### 📂 Estrutura do repositório
-- **/data/** – Arquivos em .zip
-- **/scripts/** – IF Data Bacen
-- **Trabalho.Rmd** – Trabalho - Juan Mosinho
-
-### 🧰 Tecnologias utilizadas
-- R (vars, tseries, urca, tidyverse, forecast)
-- R Markdown
-- Git/GitHub
-
-=======
-=======
->>>>>>> d87f1de21a5a0faf87fdee04eadba79920511199
 # SELIC e Desempenho Bancário: Uma Análise Econométrica com Modelo VAR
 
 Este repositório reúne o material do meu trabalho de conclusão em Ciências Econômicas pela UFPI, cujo objetivo é analisar como choques na taxa SELIC impactam o desempenho dos bancos brasileiros.
@@ -48,12 +23,11 @@ A pesquisa estima um modelo VAR para avaliar a reação do ROE dos bancos diante
 
 ## 🧑‍💻 Ferramentas
 R, R Markdown, tidyverse, vars, tseries, urca, forecast.
->>>>>>> 0998051711223cad8e09cdea695ece6df75a1eef
+
 =======
 - `/scripts` - códigos em R  
 - `/data` - Especificação da escolha dos dados
-- `Trabalho.Rmd` - esboço d trabalho 
+- `Trabalho.Rmd` - esboço do trabalho 
 
 ## 🧑‍💻 Ferramentas
 R, R Markdown, vars, tseries, urca.
->>>>>>> d87f1de21a5a0faf87fdee04eadba79920511199
